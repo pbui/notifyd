@@ -19,8 +19,8 @@ SCREEN_CACHE_FILE="${XDG_CACHE_HOME}/xrandr.screens"
 #------------------------------------------------------------------------------
 
 detect_screens() {
-    if [ -r "${SCREEN_CACHE_FILE}" -a $(( $(date +%s) - $(stat -f %m ${SCREEN_CACHE_FILE} 2> /dev/null) )) -le ${SCREEN_CACHE_TIMEOUT} ]; then
-    	cat ${SCREEN_CACHE_FILE}
+    if [ -r "${SCREEN_CACHE_FILE}" ] && [ $(( $(date +%s) - $(stat -f %m "${SCREEN_CACHE_FILE}" 2> /dev/null) )) -le ${SCREEN_CACHE_TIMEOUT} ]; then
+    	cat "${SCREEN_CACHE_FILE}"
     	return 0
     fi
 
