@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cat <<EOF | curl -X POST -d @- localhost:9412
+cat <<EOF | curl -X POST -d @- localhost:9411
 {
     "messages" : [
 	{
