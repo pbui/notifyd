@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 import time
 
 import tornado.ioloop
@@ -120,7 +121,10 @@ class NotifyDaemon(tornado.web.Application):
         self.ioloop.add_timeout(datetime.timedelta(seconds=self.sleep), lambda: self.pull(peer))
 
     def run(self):
-        self.listen(self.port)
+        try:
+            self.listen(self.port)
+        except socket.error:
+            sys.exit(1)
         self.notifier.start()
 
         for peer in self.peers:
