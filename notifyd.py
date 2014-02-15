@@ -100,7 +100,7 @@ class NotifyDaemon(tornado.web.Application):
             message['notified'] = True
 
         for (type, sender), bodies in groups.items():
-            command = '{} "{}" "{}" "{}"'.format(self.script, type, sender, '; '.join(bodies))
+            command = u'{} "{}" "{}" "{}"'.format(self.script, type, sender, '; '.join(bodies))
             subprocess.call(command, shell=True)
 
     def pull(self, peer):
