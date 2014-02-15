@@ -21,7 +21,7 @@ NOTIFYD_QUEUE_LENGTH = 100
 NOTIFYD_PERIOD       = 5 * 1000
 NOTIFYD_SLEEP        = 10
 NOTIFYD_PORT         = 9412
-NOTIFYD_SCRIPT       = 'scripts/notify.sh'
+NOTIFYD_SCRIPT       = os.path.join(os.environ['XDG_CONFIG_HOME', 'notifyd', 'scripts', 'notify.sh')
 
 #------------------------------------------------------------------------------
 # Notifyd Handler
