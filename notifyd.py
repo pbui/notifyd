@@ -20,7 +20,7 @@ import tornado.web
 NOTIFYD_QUEUE_LENGTH = 100
 NOTIFYD_PERIOD       = 5 * 1000
 NOTIFYD_SLEEP        = 10
-NOTIFYD_PORT         = 9412
+NOTIFYD_PORT         = 9411
 NOTIFYD_SCRIPT       = os.path.join(os.environ['XDG_CONFIG_HOME', 'notifyd', 'scripts', 'notify.sh')
 
 #------------------------------------------------------------------------------
