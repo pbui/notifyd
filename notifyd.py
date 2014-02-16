@@ -10,6 +10,7 @@ import time
 
 import tornado.ioloop
 import tornado.httpclient
+import tornado.gen
 import tornado.options
 import tornado.web
 
@@ -17,11 +18,12 @@ import tornado.web
 # Defaults 
 #------------------------------------------------------------------------------
 
-NOTIFYD_QUEUE_LENGTH = 100
-NOTIFYD_PERIOD       = 5 * 1000
-NOTIFYD_SLEEP        = 10
-NOTIFYD_PORT         = 9411
-NOTIFYD_SCRIPT       = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
+NOTIFYD_QUEUE_LENGTH    = 100
+NOTIFYD_PERIOD          = 1 * 1000
+NOTIFYD_SLEEP           = 10
+NOTIFYD_PORT            = 9411
+NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
+NOTIFYD_REQUEST_TIMEOUT = NOTIFYD_SLEEP * 10
 
 #------------------------------------------------------------------------------
 # Notifyd Handler
@@ -47,8 +49,8 @@ class NotifydHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self, timestamp=None):
         try:
-            messages  = json.loads(self.request.body)['messages']
-            metadata  = {'timestamp': time.time(), 'notified': False}
+            messages = json.loads(self.request.body)['messages']
+            metadata = {'timestamp': time.time(), 'notified': False}
 
             for message in messages:
                 message.update(metadata)
@@ -78,9 +80,6 @@ class NotifyDaemon(tornado.web.Application):
         self.ioloop   = tornado.ioloop.IOLoop.instance()
         self.notifier = tornado.ioloop.PeriodicCallback(self.notify, self.period)
 
-        for peer in self.peers:
-            self.pull(peer)
-
         self.add_handlers('', [
             (r'.*/',        NotifydHandler),
             (r'.*/(\d+)' ,  NotifydHandler),
@@ -100,11 +99,14 @@ class NotifyDaemon(tornado.web.Application):
             command = u'{} "{}" "{}" "{}"'.format(self.script, type, sender, '; '.join(bodies))
             subprocess.call(command, shell=True)
 
+    @tornado.gen.engine
     def pull(self, peer):
         http_client = tornado.httpclient.AsyncHTTPClient()
-        http_client.fetch('{}/{:}'.format(peer, int(time.time())), lambda response: self.pull_finish(peer, response))
+        request     = tornado.httpclient.HTTPRequest(
+            url             = '{}/{:}'.format(peer, int(time.time())),
+            request_timeout = NOTIFYD_REQUEST_TIMEOUT)
+        response    = yield tornado.gen.Task(http_client.fetch, request)
 
-    def pull_finish(self, peer, response):
         try:
             messages = json.loads(response.body)['messages']
             for message in messages:
@@ -120,6 +122,11 @@ class NotifyDaemon(tornado.web.Application):
     def run(self):
         self.listen(self.port)
         self.notifier.start()
+
+        for peer in self.peers:
+            self.logger.debug('Pulling from {}'.format(peer))
+            self.pull(peer)
+
         self.ioloop.start()
 
 #------------------------------------------------------------------------------
