@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
 import email
+import json
 import os
 import subprocess
 import sys
@@ -88,15 +89,14 @@ def notify_maildir(maildir):
             if sender and subject:
                 messages.append({
                     'type'      : 'MAIL',
-                    'sender'    : sender,
-                    'body'      : subject,
+                    'sender'    : sender.strip(),
+                    'body'      : subject.strip(),
                 })
 
     if messages:
         data = {'messages': messages}
         curl = subprocess.Popen(['curl', '-X', 'POST', '-d', '@-', 'http://localhost:9411'], stdin=subprocess.PIPE)
-        json.dump(curl, data)
-        curl.wait()
+        curl.communicate(json.dumps(data))
 
 #------------------------------------------------------------------------------
 # Main execution
