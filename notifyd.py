@@ -36,17 +36,17 @@ class NotifydHandler(tornado.web.RequestHandler):
     def get(self, timestamp):
         timestamp = float(timestamp)
         filtered  = [m for m in self.application.messages if m['timestamp'] >= timestamp]
-        if not filtered:
-            tornado.ioloop.IOLoop.instance().add_timeout(
-                    datetime.timedelta(seconds=self.application.sleep),
-                    lambda: self.get(timestamp))
-        else:
+        if filtered:
             try:
                 self.write(json.dumps({'messages': filtered}))
                 self.application.logger.debug('sent json: {}'.format(filtered))
             except TypeError as e:
                 self.application.logger.error('could not write json: {}'.format(e))
             self.finish()
+        else:
+            tornado.ioloop.IOLoop.instance().add_timeout(
+                    datetime.timedelta(seconds=self.application.sleep),
+                    lambda: self.get(timestamp))
 
     @tornado.web.asynchronous
     def post(self, timestamp=None):
