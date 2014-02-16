@@ -20,12 +20,12 @@ import tornado.web
 # Defaults
 #------------------------------------------------------------------------------
 
-NOTIFYD_QUEUE_LENGTH    = 100
-NOTIFYD_PERIOD          = 1
-NOTIFYD_SLEEP           = 5
+NOTIFYD_QUEUE_LENGTH    = 100       # Hundred messages
+NOTIFYD_PERIOD          = 1         # One second
+NOTIFYD_SLEEP           = 5         # Five seconds
 NOTIFYD_PORT            = 9411
 NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
-NOTIFYD_REQUEST_TIMEOUT = NOTIFYD_SLEEP * 10
+NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 
 #------------------------------------------------------------------------------
 # Notifyd Handler
@@ -105,6 +105,16 @@ class NotifyDaemon(tornado.web.Application):
 
     def add_messages(self, messages):
         self.messages.extend(messages)
+
+        for message in messages:
+            type   = message['type']
+            sender = message['sender']
+            body   = message['body']
+            if not body:
+                self.logger.info('{:>8}: {:>12}'.format(type, sender))
+            else:
+                self.logger.info('{:>8}: {:>12} | {}'.format(type, sender, body))
+
         if not self.notify_scheduled:
             self.ioloop.add_timeout(datetime.timedelta(seconds=self.period), self.notify)
             self.notify_scheduled = True
@@ -123,7 +133,6 @@ class NotifyDaemon(tornado.web.Application):
                 message['notified'] = False
 
             self.add_messages(messages)
-            self.logger.info('read json: {}'.format(response.body))
         except (TypeError, ValueError, KeyError) as e:
             self.logger.debug('could not read json: {}\n{}'.format(response.body, e))
 
