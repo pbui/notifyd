@@ -17,12 +17,12 @@ import tornado.options
 import tornado.web
 
 #------------------------------------------------------------------------------
-# Defaults 
+# Defaults
 #------------------------------------------------------------------------------
 
 NOTIFYD_QUEUE_LENGTH    = 100
-NOTIFYD_PERIOD          = 1 * 1000
-NOTIFYD_SLEEP           = 10
+NOTIFYD_PERIOD          = 1
+NOTIFYD_SLEEP           = 5
 NOTIFYD_PORT            = 9411
 NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
 NOTIFYD_REQUEST_TIMEOUT = NOTIFYD_SLEEP * 10
@@ -57,7 +57,7 @@ class NotifydHandler(tornado.web.RequestHandler):
             for message in messages:
                 message.update(metadata)
 
-            self.application.messages.extend(messages)
+            self.application.add_messages(messages)
         except (ValueError, KeyError) as e:
             self.application.logger.error('could not read json: {}\n{}'.format(self.request.body, e))
 
@@ -80,7 +80,7 @@ class NotifyDaemon(tornado.web.Application):
         self.script   = settings.get('script', NOTIFYD_SCRIPT)
         self.peers    = settings.get('peers', [])
         self.ioloop   = tornado.ioloop.IOLoop.instance()
-        self.notifier = tornado.ioloop.PeriodicCallback(self.notify, self.period)
+        self.notify_scheduled = False
 
         self.add_handlers('', [
             (r'.*/',        NotifydHandler),
@@ -88,6 +88,8 @@ class NotifyDaemon(tornado.web.Application):
         ])
 
     def notify(self):
+        self.notify_scheduled = False
+
         if not os.path.exists(self.script):
             return
 
@@ -100,6 +102,12 @@ class NotifyDaemon(tornado.web.Application):
         for (type, sender), bodies in groups.items():
             command = u'{} "{}" "{}" "{}"'.format(self.script, type, sender, '; '.join(bodies))
             subprocess.call(command, shell=True)
+
+    def add_messages(self, messages):
+        self.messages.extend(messages)
+        if not self.notify_scheduled:
+            self.ioloop.add_timeout(datetime.timedelta(seconds=self.period), self.notify)
+            self.notify_scheduled = True
 
     @tornado.gen.engine
     def pull(self, peer):
@@ -114,7 +122,7 @@ class NotifyDaemon(tornado.web.Application):
             for message in messages:
                 message['notified'] = False
 
-            self.messages.extend(messages)
+            self.add_messages(messages)
             self.logger.debug('read json: {}'.format(response.body))
         except (TypeError, ValueError, KeyError) as e:
             self.logger.debug('could not read json: {}\n{}'.format(response.body, e))
@@ -126,7 +134,6 @@ class NotifyDaemon(tornado.web.Application):
             self.listen(self.port)
         except socket.error:
             sys.exit(1)
-        self.notifier.start()
 
         for peer in self.peers:
             self.logger.debug('Pulling from {}'.format(peer))
