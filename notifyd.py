@@ -28,23 +28,20 @@ NOTIFYD_SCRIPT       = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
 #------------------------------------------------------------------------------
 
 class NotifydHandler(tornado.web.RequestHandler):
-    def initialize(self, daemon):
-        self.daemon = daemon
-
     @tornado.web.asynchronous
     def get(self, timestamp):
         timestamp = float(timestamp)
-        filtered  = [m for m in self.daemon.messages if m['timestamp'] >= timestamp]
+        filtered  = [m for m in self.application.messages if m['timestamp'] >= timestamp]
         if not filtered:
             tornado.ioloop.IOLoop.instance().add_timeout(
-                    datetime.timedelta(seconds=self.daemon.sleep),
+                    datetime.timedelta(seconds=self.application.sleep),
                     lambda: self.get(timestamp))
         else:
             try:
                 self.write(json.dumps({'messages': filtered}))
-                self.daemon.logger.debug('sent json: {}'.format(filtered))
+                self.application.logger.debug('sent json: {}'.format(filtered))
             except TypeError as e:
-                self.daemon.logger.error('could not write json: {}'.format(e))
+                self.application.logger.error('could not write json: {}'.format(e))
             self.finish()
 
     @tornado.web.asynchronous
@@ -56,9 +53,9 @@ class NotifydHandler(tornado.web.RequestHandler):
             for message in messages:
                 message.update(metadata)
 
-            self.daemon.messages.extend(messages)
+            self.application.messages.extend(messages)
         except (ValueError, KeyError) as e:
-            self.daemon.logger.error('could not read json: {}\n{}'.format(self.request.body, e))
+            self.application.logger.error('could not read json: {}\n{}'.format(self.request.body, e))
 
         self.finish()
 
@@ -85,8 +82,8 @@ class NotifyDaemon(tornado.web.Application):
             self.pull(peer)
 
         self.add_handlers('', [
-            (r'.*/',        NotifydHandler, {'daemon': self}),
-            (r'.*/(\d+)' ,  NotifydHandler, {'daemon': self}),
+            (r'.*/',        NotifydHandler),
+            (r'.*/(\d+)' ,  NotifydHandler),
         ])
 
     def notify(self):
