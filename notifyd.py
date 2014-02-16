@@ -39,7 +39,7 @@ class NotifydHandler(tornado.web.RequestHandler):
         if filtered:
             try:
                 self.write(json.dumps({'messages': filtered}))
-                self.application.logger.debug('sent json: {}'.format(filtered))
+                self.application.logger.info('sent json: {}'.format(filtered))
             except TypeError as e:
                 self.application.logger.error('could not write json: {}'.format(e))
             self.finish()
@@ -123,7 +123,7 @@ class NotifyDaemon(tornado.web.Application):
                 message['notified'] = False
 
             self.add_messages(messages)
-            self.logger.debug('read json: {}'.format(response.body))
+            self.logger.info('read json: {}'.format(response.body))
         except (TypeError, ValueError, KeyError) as e:
             self.logger.debug('could not read json: {}\n{}'.format(response.body, e))
 
