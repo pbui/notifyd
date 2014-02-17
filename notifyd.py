@@ -104,8 +104,12 @@ class NotifyDaemon(tornado.web.Application):
             message['notified'] = True
 
         for (type, sender), bodies in groups.items():
-            command = u'{} "{}" "{}" "{}"'.format(self.script, type, sender, '; '.join(bodies))
-            subprocess.call(command, shell=True)
+            if type in ('CHAT', 'MAIL'):
+                bodies = ['; '.join(bodies)]
+
+            for body in bodies:
+                command = u'{} "{}" "{}" "{}"'.format(self.script, type, sender, body)
+                subprocess.call(command, shell=True)
 
     def add_messages(self, messages):
         self.messages.extend(messages)
