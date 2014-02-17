@@ -87,6 +87,10 @@ class NotifyDaemon(tornado.web.Application):
             (r'.*/(\d+)' ,  NotifydHandler),
         ])
 
+        self.peers_timestamp = {}
+        for peer in self.peers:
+            self.peers_timestamp[peer] = time.time()
+
     def notify(self):
         self.notify_scheduled = False
 
@@ -126,9 +130,11 @@ class NotifyDaemon(tornado.web.Application):
     def pull(self, peer):
         http_client = tornado.httpclient.AsyncHTTPClient()
         request     = tornado.httpclient.HTTPRequest(
-            url             = '{}/{:}'.format(peer, int(time.time())),
+            url             = '{}/{}'.format(peer, int(self.peers_timestamp[peer])),
             request_timeout = NOTIFYD_REQUEST_TIMEOUT)
         response    = yield tornado.gen.Task(http_client.fetch, request)
+
+        self.peers_timestamp[peer] = time.time()
 
         try:
             messages = json.loads(response.body)['messages']
