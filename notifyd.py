@@ -106,14 +106,17 @@ class NotifyDaemon(tornado.web.Application):
     def add_messages(self, messages):
         self.messages.extend(messages)
 
+        formatted_messages = []
         for message in messages:
             type   = message['type']
             sender = message['sender']
             body   = message['body']
             if not body:
-                self.logger.info('{:>8}: {:>12}'.format(type, sender))
+                formatted_messages.append('[{:>8}] {:>16}'.format(type, sender))
             else:
-                self.logger.info('{:>8}: {:>12} | {}'.format(type, sender, body))
+                formatted_messages.append('[{:>8}] {:>16} | {}'.format(type, sender, body))
+
+        self.logger.info('Added {} message(s)...\n{}'.format(len(messages), '\n'.join(formatted_messages)))
 
         if not self.notify_scheduled:
             self.ioloop.add_timeout(datetime.timedelta(seconds=self.period), self.notify)
