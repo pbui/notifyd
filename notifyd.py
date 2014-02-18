@@ -45,8 +45,12 @@ class NotifydHandler(tornado.web.RequestHandler):
                 self.application.logger.error('could not write json: {}'.format(e))
             self.finish()
         else:
-            self.application.logger.debug('get timeout...')
+            self.application.logger.debug('GET timeout...')
             tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), lambda: self.get(timeout))
+
+    def on_connection_close(self):
+        self.application.logger.debug('Connection closed')
+        self.finish()
 
     @tornado.web.asynchronous
     def post(self, timeout=None):
