@@ -151,7 +151,7 @@ class NotifyDaemon(tornado.web.Application):
         self.logger.debug('Starting pull...')
         http_client = tornado.httpclient.AsyncHTTPClient()
         request     = tornado.httpclient.HTTPRequest(
-            url             = '{}/{}'.format(peer),
+            url             = peer,
             request_timeout = NOTIFYD_REQUEST_TIMEOUT)
         response    = yield tornado.gen.Task(http_client.fetch, request)
 
