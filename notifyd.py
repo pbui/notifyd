@@ -35,10 +35,12 @@ class NotifydHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, timestamp):
         timestamp = float(timestamp)
-        filtered  = [m for m in self.application.messages if m['timestamp'] >= timestamp]
+        filtered  = [m for m in self.application.messages if m['timestamp'] >= timestamp and self.request.remote_ip not in m['delivered']]
         if filtered:
             try:
                 self.write(json.dumps({'messages': filtered}))
+                for message in filtered:
+                    message['delivered'].append(self.request.remote_ip)
                 self.application.logger.info('sent json: {}'.format(filtered))
             except TypeError as e:
                 self.application.logger.error('could not write json: {}'.format(e))
@@ -52,7 +54,7 @@ class NotifydHandler(tornado.web.RequestHandler):
     def post(self, timestamp=None):
         try:
             messages = json.loads(self.request.body)['messages']
-            metadata = {'timestamp': time.time(), 'notified': False}
+            metadata = {'timestamp': time.time(), 'notified': False, 'delivered': []}
 
             for message in messages:
                 message.update(metadata)
