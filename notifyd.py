@@ -154,6 +154,7 @@ class NotifyDaemon(tornado.web.Application):
 
     @tornado.gen.engine
     def pull(self, peer):
+        self.logger.debug('Starting pull...')
         http_client = tornado.httpclient.AsyncHTTPClient()
         request     = tornado.httpclient.HTTPRequest(
             url             = '{}/{}'.format(peer, int(self.peers_timestamp[peer])),
@@ -161,6 +162,7 @@ class NotifyDaemon(tornado.web.Application):
         response    = yield tornado.gen.Task(http_client.fetch, request)
 
         self.peers_timestamp[peer] = time.time()
+        self.logger.debug('Finishing pull...')
 
         try:
             messages = json.loads(response.body)['messages']
