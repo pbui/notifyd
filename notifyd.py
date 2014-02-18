@@ -32,9 +32,10 @@ NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 
 class NotifydHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    def get(self):
+    def get(self, timeout=None):
+        timeout  = timeout or (time.time() + NOTIFYD_REQUEST_TIMEOUT)
         filtered = [m for m in self.application.messages if self.request.remote_ip not in m['delivered']]
-        if filtered:
+        if filtered or time.time() >= timeout:
             try:
                 self.write(json.dumps({u'messages': filtered}))
                 for message in filtered:
@@ -45,10 +46,10 @@ class NotifydHandler(tornado.web.RequestHandler):
             self.finish()
         else:
             self.application.logger.debug('get timeout...')
-            tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), self.get)
+            tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), lambda: self.get(timeout))
 
     @tornado.web.asynchronous
-    def post(self):
+    def post(self, timeout=None):
         try:
             messages = json.loads(self.request.body)['messages']
             metadata = {u'notified': False, u'delivered': []}
