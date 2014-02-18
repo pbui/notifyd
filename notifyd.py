@@ -41,7 +41,7 @@ class NotifydHandler(tornado.web.RequestHandler):
                 self.write(json.dumps({'messages': filtered}))
                 for message in filtered:
                     message['delivered'].append(self.request.remote_ip)
-                self.application.logger.info('sent json: {}'.format(filtered))
+                self.application.logger.debug('sent json: {}'.format(filtered))
             except TypeError as e:
                 self.application.logger.error('could not write json: {}'.format(e))
             self.finish()
