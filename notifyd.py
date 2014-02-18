@@ -50,8 +50,9 @@ class NotifydHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self):
         try:
-            messages = json.loads(self.request.body)['messages']
-            metadata = {'notified': False, 'delivered': []}
+            body     = unicode(self.request.body, 'utf-8')
+            messages = json.loads(body)['messages']
+            metadata = {u'notified': False, u'delivered': []}
 
             for message in messages:
                 message.update(metadata)
@@ -158,6 +159,7 @@ class NotifyDaemon(tornado.web.Application):
         self.logger.debug('Finishing pull...')
 
         try:
+            body     = unicode(response.body, 'utf-8')
             messages = json.loads(response.body)['messages']
             for message in messages:
                 message['notified'] = False
