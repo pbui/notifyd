@@ -32,9 +32,8 @@ NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 
 class NotifydHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    def get(self, timestamp):
-        timestamp = float(timestamp)
-        filtered  = [m for m in self.application.messages if m['timestamp'] >= timestamp and self.request.remote_ip not in m['delivered']]
+    def get(self):
+        filtered = [m for m in self.application.messages if self.request.remote_ip not in m['delivered']]
         if filtered:
             try:
                 self.write(json.dumps({'messages': filtered}))
@@ -45,15 +44,14 @@ class NotifydHandler(tornado.web.RequestHandler):
                 self.application.logger.error('could not write json: {}'.format(e))
             self.finish()
         else:
-            tornado.ioloop.IOLoop.instance().add_timeout(
-                    datetime.timedelta(seconds=self.application.sleep),
-                    lambda: self.get(timestamp))
+            self.application.logger.debug('get timeout...')
+            tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), self.get)
 
     @tornado.web.asynchronous
-    def post(self, timestamp=None):
+    def post(self):
         try:
             messages = json.loads(self.request.body)['messages']
-            metadata = {'timestamp': time.time(), 'notified': False, 'delivered': []}
+            metadata = {'notified': False, 'delivered': []}
 
             for message in messages:
                 message.update(metadata)
@@ -87,10 +85,6 @@ class NotifyDaemon(tornado.web.Application):
             (r'.*/',        NotifydHandler),
             (r'.*/(\d+)' ,  NotifydHandler),
         ])
-
-        self.peers_timestamp = {}
-        for peer in self.peers:
-            self.peers_timestamp[peer] = time.time()
 
     def _execute_daemon(self, argv):
         try:
@@ -157,11 +151,10 @@ class NotifyDaemon(tornado.web.Application):
         self.logger.debug('Starting pull...')
         http_client = tornado.httpclient.AsyncHTTPClient()
         request     = tornado.httpclient.HTTPRequest(
-            url             = '{}/{}'.format(peer, int(self.peers_timestamp[peer])),
+            url             = '{}/{}'.format(peer),
             request_timeout = NOTIFYD_REQUEST_TIMEOUT)
         response    = yield tornado.gen.Task(http_client.fetch, request)
 
-        self.peers_timestamp[peer] = time.time()
         self.logger.debug('Finishing pull...')
 
         try:
