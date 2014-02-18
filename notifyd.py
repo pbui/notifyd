@@ -36,7 +36,7 @@ class NotifydHandler(tornado.web.RequestHandler):
         filtered = [m for m in self.application.messages if self.request.remote_ip not in m['delivered']]
         if filtered:
             try:
-                self.write(json.dumps({'messages': filtered}))
+                self.write(json.dumps({u'messages': filtered}))
                 for message in filtered:
                     message['delivered'].append(self.request.remote_ip)
                 self.application.logger.debug('sent json: {}'.format(filtered))
@@ -50,8 +50,7 @@ class NotifydHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self):
         try:
-            body     = unicode(self.request.body, 'utf-8')
-            messages = json.loads(body)['messages']
+            messages = json.loads(self.request.body)['messages']
             metadata = {u'notified': False, u'delivered': []}
 
             for message in messages:
@@ -137,11 +136,11 @@ class NotifyDaemon(tornado.web.Application):
             sender = message['sender']
             body   = message['body']
             if not body:
-                formatted_messages.append('[{:>8}] {:>16}'.format(type, sender))
+                formatted_messages.append(u'[{:>8}] {:>16}'.format(type, sender))
             else:
-                formatted_messages.append('[{:>8}] {:>16} | {}'.format(type, sender, body))
+                formatted_messages.append(u'[{:>8}] {:>16} | {}'.format(type, sender, body))
 
-        self.logger.info('Added {} message(s)...\n{}'.format(len(messages), '\n'.join(formatted_messages)))
+        self.logger.info(u'Added {} message(s)...\n{}'.format(len(messages), '\n'.join(formatted_messages)))
 
         if not self.notify_scheduled:
             self.ioloop.add_timeout(datetime.timedelta(seconds=self.period), self.notify)
@@ -159,7 +158,6 @@ class NotifyDaemon(tornado.web.Application):
         self.logger.debug('Finishing pull...')
 
         try:
-            body     = unicode(response.body, 'utf-8')
             messages = json.loads(response.body)['messages']
             for message in messages:
                 message['notified'] = False
