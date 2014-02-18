@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import socket
-import subprocess
 import sys
 import time
 
@@ -93,6 +92,28 @@ class NotifyDaemon(tornado.web.Application):
         for peer in self.peers:
             self.peers_timestamp[peer] = time.time()
 
+    def _execute_daemon(self, argv):
+        try:
+            pid = os.fork()         # Fork 1
+            if pid > 0:             # Parent returns
+                return
+        except OSError as e:
+            self.logger.error('Unable to fork: {}'.format(e))
+            return
+
+        os.setsid()                 # New session group
+
+        try:
+            pid = os.fork()         # Fork 2
+            if pid > 0:             # Parent exits
+                sys.exit(0)
+        except OSError as e:
+            self.logger.error('Unable to fork: {}'.format(e))
+            sys.exit(1)
+
+        os.execvp(argv[0], argv)    # Child execs
+        sys.exit(1)
+
     def notify(self):
         self.notify_scheduled = False
 
@@ -110,8 +131,7 @@ class NotifyDaemon(tornado.web.Application):
                 bodies = ['; '.join(bodies)]
 
             for body in bodies:
-                command = u'{} "{}" "{}" "{}"'.format(self.script, type, sender, body)
-                subprocess.call(command, shell=True)
+                self._execute_daemon([self.script, type, sender, body])
 
     def add_messages(self, messages):
         self.messages.extend(messages)
