@@ -144,13 +144,15 @@ class NotifyDaemon(tornado.web.Application):
 
         formatted_messages = []
         for message in messages:
+            message['type'] = message['type'].upper()
+
             type   = message['type']
             sender = message['sender']
             body   = message['body']
             if not body:
-                formatted_messages.append(u'[{:>8}] {:>16}'.format(type, sender))
+                formatted_messages.append(u'[{:^8}] {:>20}'.format(type, sender))
             else:
-                formatted_messages.append(u'[{:>8}] {:>16} | {}'.format(type, sender, body))
+                formatted_messages.append(u'[{:^8}] {:>20} | {}'.format(type, sender, body))
 
         self.logger.info(u'Added {} message(s)...\n{}'.format(len(messages), '\n'.join(formatted_messages)))
 
