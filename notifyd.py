@@ -31,17 +31,23 @@ NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 #------------------------------------------------------------------------------
 
 class NotifydHandler(tornado.web.RequestHandler):
+    finished = False
+
     @tornado.web.asynchronous
     def get(self, timeout=None):
+        if self.finished:
+            return
+
         timeout  = timeout or (time.time() + NOTIFYD_REQUEST_TIMEOUT)
         filtered = [m for m in self.application.messages if self.request.remote_ip not in m['delivered']]
+
         if filtered or time.time() >= timeout:
             try:
                 self.write(json.dumps({u'messages': filtered}))
                 for message in filtered:
                     message['delivered'].append(self.request.remote_ip)
                 self.application.logger.debug('sent json: {}'.format(filtered))
-            except TypeError as e:
+            except (RuntimeError, TypeError) as e:
                 self.application.logger.error('could not write json: {}'.format(e))
             self.finish()
         else:
@@ -49,6 +55,7 @@ class NotifydHandler(tornado.web.RequestHandler):
             tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), lambda: self.get(timeout))
 
     def on_connection_close(self):
+        self.finished = True
         self.application.logger.debug('Connection closed')
         self.finish()
 
