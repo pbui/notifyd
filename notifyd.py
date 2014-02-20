@@ -52,7 +52,7 @@ class NotifydHandler(tornado.web.RequestHandler):
             self.finish()
         else:
             self.application.logger.debug('GET timeout...')
-            tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), lambda: self.get(timeout))
+            tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), lambda: self.get(identifier, timeout))
 
     def on_connection_close(self):
         self.finished = True
