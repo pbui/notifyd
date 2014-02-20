@@ -34,18 +34,18 @@ class NotifydHandler(tornado.web.RequestHandler):
     finished = False
 
     @tornado.web.asynchronous
-    def get(self, timeout=None):
+    def get(self, identifier, timeout=None):
         if self.finished:
             return
 
         timeout  = timeout or (time.time() + NOTIFYD_REQUEST_TIMEOUT)
-        filtered = [m for m in self.application.messages if self.request.remote_ip not in m['delivered']]
+        filtered = [m for m in self.application.messages if identifier not in m['delivered']]
 
         if filtered or time.time() >= timeout:
             try:
                 self.write(json.dumps({u'messages': filtered}))
                 for message in filtered:
-                    message['delivered'].append(self.request.remote_ip)
+                    message['delivered'].append(identifier)
                 self.application.logger.debug('sent json: {}'.format(filtered))
             except (RuntimeError, TypeError) as e:
                 self.application.logger.error('could not write json: {}'.format(e))
@@ -83,19 +83,20 @@ class NotifyDaemon(tornado.web.Application):
     def __init__(self, **settings):
         tornado.web.Application.__init__(self, **settings)
 
-        self.messages = collections.deque(maxlen=NOTIFYD_QUEUE_LENGTH)
-        self.logger   = logging.getLogger()
-        self.sleep    = settings.get('sleep', NOTIFYD_SLEEP)
-        self.period   = settings.get('period', NOTIFYD_PERIOD)
-        self.port     = settings.get('port', NOTIFYD_PORT)
-        self.script   = settings.get('script', NOTIFYD_SCRIPT)
-        self.peers    = settings.get('peers', [])
-        self.ioloop   = tornado.ioloop.IOLoop.instance()
+        self.messages   = collections.deque(maxlen=NOTIFYD_QUEUE_LENGTH)
+        self.logger     = logging.getLogger()
+        self.sleep      = settings.get('sleep', NOTIFYD_SLEEP)
+        self.period     = settings.get('period', NOTIFYD_PERIOD)
+        self.port       = settings.get('port', NOTIFYD_PORT)
+        self.script     = settings.get('script', NOTIFYD_SCRIPT)
+        self.peers      = settings.get('peers', [])
+        self.ioloop     = tornado.ioloop.IOLoop.instance()
+        self.identifier = '{}.{}'.format(os.uname()[1], os.getpid())
         self.notify_scheduled = False
 
         self.add_handlers('', [
-            (r'.*/',        NotifydHandler),
-            (r'.*/(\d+)' ,  NotifydHandler),
+            (r'.*/',            NotifydHandler),
+            (r'.*/([\w.]+)' ,   NotifydHandler),
         ])
 
     def _execute_daemon(self, argv):
@@ -165,7 +166,7 @@ class NotifyDaemon(tornado.web.Application):
         self.logger.debug('Starting pull...')
         http_client = tornado.httpclient.AsyncHTTPClient()
         request     = tornado.httpclient.HTTPRequest(
-            url             = peer,
+            url             = '{}/{}'.format(peer, self.identifier),
             request_timeout = NOTIFYD_REQUEST_TIMEOUT)
         response    = yield tornado.gen.Task(http_client.fetch, request)
 
