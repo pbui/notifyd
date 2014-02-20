@@ -14,12 +14,18 @@ DZEN2_TIMEOUT=5
 SCREEN_CACHE_TIMEOUT="60"
 SCREEN_CACHE_FILE="${XDG_CACHE_HOME}/xrandr.screens"
 
+if [ "$(uname)" = "Linux" ]; then
+    STAT_MTIME="stat -c %s"
+else
+    STAT_MTIME="stat -f %m"
+fi
+
 #------------------------------------------------------------------------------
 # Detect Screens using XRandR
 #------------------------------------------------------------------------------
 
 detect_screens() {
-    if [ -r "${SCREEN_CACHE_FILE}" ] && [ $(( $(date +%s) - $(stat -f %m "${SCREEN_CACHE_FILE}" 2> /dev/null) )) -le ${SCREEN_CACHE_TIMEOUT} ]; then
+    if [ -r "${SCREEN_CACHE_FILE}" ] && [ $(( $(date +%s) - $(${STAT_MTIME} "${SCREEN_CACHE_FILE}" 2> /dev/null) )) -le ${SCREEN_CACHE_TIMEOUT} ]; then
     	cat "${SCREEN_CACHE_FILE}"
     	return 0
     fi
