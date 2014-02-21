@@ -5,6 +5,7 @@ import datetime
 import json
 import logging
 import os
+import signal
 import socket
 import sys
 import time
@@ -98,6 +99,8 @@ class NotifyDaemon(tornado.web.Application):
             (r'.*/',            NotifydHandler),
             (r'.*/([\w.]+)' ,   NotifydHandler),
         ])
+
+        signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
     def _execute_daemon(self, argv):
         try:
