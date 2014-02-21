@@ -97,7 +97,7 @@ class NotifyDaemon(tornado.web.Application):
 
         self.add_handlers('', [
             (r'.*/',            NotifydHandler),
-            (r'.*/([\w.]+)' ,   NotifydHandler),
+            (r'.*/([\w:]+)' ,   NotifydHandler),
         ])
 
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
