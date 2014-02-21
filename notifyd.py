@@ -92,7 +92,7 @@ class NotifyDaemon(tornado.web.Application):
         self.script     = settings.get('script', NOTIFYD_SCRIPT)
         self.peers      = settings.get('peers', [])
         self.ioloop     = tornado.ioloop.IOLoop.instance()
-        self.identifier = '{}.{}'.format(os.uname()[1], os.getpid())
+        self.identifier = '{}:{}'.format(os.uname()[1], self.port)
         self.notify_scheduled = False
 
         self.add_handlers('', [
