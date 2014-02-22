@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import time
+import requests
 
 #------------------------------------------------------------------------------
 # Configuration
@@ -94,9 +95,7 @@ def notify_maildir(maildir):
                 })
 
     if messages:
-        data = {'messages': messages}
-        curl = subprocess.Popen(['curl', '-X', 'POST', '-d', '@-', 'http://localhost:9411'], stdin=subprocess.PIPE)
-        curl.communicate(json.dumps(data))
+        requests.post('http://localhost:9411/messages' data=json.dumps({'messages': messages}))
 
 #------------------------------------------------------------------------------
 # Main execution

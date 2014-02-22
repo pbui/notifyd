@@ -99,6 +99,7 @@ class NotifyDaemon(tornado.web.Application):
 
         self.add_handlers('', [
             (r'.*/files/(.*)' ,         tornado.web.StaticFileHandler, {'path': self.files_path}),
+            (r'.*/messages' ,           MessagesHandler),
             (r'.*/messages/([\w:]+)' ,  MessagesHandler),
         ])
 

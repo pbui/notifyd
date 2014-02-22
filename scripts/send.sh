@@ -5,7 +5,7 @@ SENDER=$2
 shift 2
 BODY=$@
 
-cat <<EOF | curl -X POST -d @- localhost:9411
+cat <<EOF | curl -X POST -d @- http://localhost:9411/messages
 {
     "messages" : [
 	{
