@@ -25,13 +25,14 @@ NOTIFYD_PERIOD          = 1         # One second
 NOTIFYD_SLEEP           = 5         # Five seconds
 NOTIFYD_PORT            = 9411
 NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
+NOTIFYD_FILES_PATH      = os.path.expanduser('~/.config/notifyd/files')
 NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 
 #------------------------------------------------------------------------------
-# Notifyd Handler
+# Messages Handler
 #------------------------------------------------------------------------------
 
-class NotifydHandler(tornado.web.RequestHandler):
+class MessagesHandler(tornado.web.RequestHandler):
     finished = False
 
     @tornado.web.asynchronous
@@ -91,13 +92,14 @@ class NotifyDaemon(tornado.web.Application):
         self.port       = settings.get('port', NOTIFYD_PORT)
         self.script     = settings.get('script', NOTIFYD_SCRIPT)
         self.peers      = settings.get('peers', [])
+        self.files_path = settings.get('files_path', NOTIFYD_FILES_PATH)
         self.ioloop     = tornado.ioloop.IOLoop.instance()
         self.identifier = '{}:{}'.format(os.uname()[1], self.port)
         self.notify_scheduled = False
 
         self.add_handlers('', [
-            (r'.*/',            NotifydHandler),
-            (r'.*/([\w:]+)' ,   NotifydHandler),
+            (r'.*/files/(.*)' ,         tornado.web.StaticFileHandler, {'path': self.files_path}),
+            (r'.*/messages/([\w:]+)' ,  MessagesHandler),
         ])
 
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -169,7 +171,7 @@ class NotifyDaemon(tornado.web.Application):
         self.logger.debug('Starting pull...')
         http_client = tornado.httpclient.AsyncHTTPClient()
         request     = tornado.httpclient.HTTPRequest(
-            url             = '{}/{}'.format(peer, self.identifier),
+            url             = '{}/messages/{}'.format(peer, self.identifier),
             request_timeout = NOTIFYD_REQUEST_TIMEOUT)
         response    = yield tornado.gen.Task(http_client.fetch, request)
 
@@ -203,12 +205,13 @@ class NotifyDaemon(tornado.web.Application):
 #------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    tornado.options.define('debug', default=False, help='Debugging mode.')
+    tornado.options.define('debug', default=False, help='Enable debugging mode.')
     tornado.options.define('port', default=NOTIFYD_PORT, help='Port to listen on.')
     tornado.options.define('peers', default=None, multiple=True, help='List of peers to pull message from.')
+    tornado.options.define('files_path', default=NOTIFYD_FILES_PATH, help='Path to files directory.')
     tornado.options.parse_command_line()
-    options = tornado.options.options.as_dict()
 
+    options = tornado.options.options.as_dict()
     notifyd = NotifyDaemon(**options)
     notifyd.run()
 
