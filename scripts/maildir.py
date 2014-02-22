@@ -95,7 +95,7 @@ def notify_maildir(maildir):
                 })
 
     if messages:
-        requests.post('http://localhost:9411/messages' data=json.dumps({'messages': messages}))
+        requests.post('http://localhost:9411/messages', data=json.dumps({'messages': messages}))
 
 #------------------------------------------------------------------------------
 # Main execution
