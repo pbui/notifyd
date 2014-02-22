@@ -6,6 +6,6 @@ if [ -x ${PREFIX}/dzen2.sh ]; then
     ${PREFIX}/dzen2.sh "$@"
 fi
 
-if [ -x ${PREFIX}/open.sh ]; then
-    ${PREFIX}/open.sh "$@"
+if [ -x ${PREFIX}/dispatch.sh ]; then
+    ${PREFIX}/dispatch.sh "$@"
 fi
