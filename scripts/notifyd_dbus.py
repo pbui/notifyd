@@ -25,6 +25,14 @@ DEFAULT_APP_ICON        = 'notifyd'
 DEFAULT_LOGGER          = 'notifyd'
 
 #-------------------------------------------------------------------------------
+# Renaming
+#-------------------------------------------------------------------------------
+
+ICON_TABLE = {
+    'drive-removable-media': 'udiskie',
+}
+
+#-------------------------------------------------------------------------------
 # DBUS configuration
 #-------------------------------------------------------------------------------
 
@@ -63,17 +71,17 @@ class NotificationService(dbus.service.Object):
 
     @dbus.service.method(dbus_interface=DBUS_SERVICE, in_signature='susssasa{sv}i', out_signature='u')
     def Notify(self, app_name, replaces_id, app_icon, summary, body, actions, hints, expire_timeout):
+        self.logger.debug('Notify')
+        app_icon = app_icon or 'NOTIFYD'
         requests.post('http://127.0.0.1:9412/messages', data=json.dumps({
             'messages': [
                 {
-                     'type'  : app_icon or 'NOTIFYD',
+                     'type'  : ICON_TABLE.get(app_icon, app_icon),
                      'sender': summary.strip(),
                      'body'  : strip_html(body.strip()),
                 }
             ],
         }))
-
-        self.logger.debug('%s', n)
         return next(self.counter)
 
 def notifyd_dbus():
