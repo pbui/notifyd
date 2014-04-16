@@ -142,6 +142,8 @@ class NotifyDaemon(tornado.web.Application):
         for (type, sender), bodies in groups.items():
             if type in ('CHAT', 'MAIL'):
                 bodies = ['; '.join(bodies)]
+            elif type in ('VOLUME'):
+                bodies = [bodies[-1]]
 
             for body in bodies:
                 self._execute_daemon([self.script, type, sender, body])
