@@ -24,6 +24,7 @@ NOTIFYD_QUEUE_LENGTH    = 100       # Hundred messages
 NOTIFYD_PERIOD          = 1         # One second
 NOTIFYD_SLEEP           = 5         # Five seconds
 NOTIFYD_PORT            = 9411
+NOTIFYD_ADDRESS         = '127.0.0.1'
 NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
 NOTIFYD_FILES_PATH      = os.path.expanduser('~/.config/notifyd/files')
 NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
@@ -90,6 +91,7 @@ class NotifyDaemon(tornado.web.Application):
         self.sleep      = settings.get('sleep', NOTIFYD_SLEEP)
         self.period     = settings.get('period', NOTIFYD_PERIOD)
         self.port       = settings.get('port', NOTIFYD_PORT)
+        self.address    = settings.get('address', NOTIFYD_ADDRESS)
         self.script     = settings.get('script', NOTIFYD_SCRIPT)
         self.peers      = settings.get('peers', [])
         self.files_path = settings.get('files_path', NOTIFYD_FILES_PATH)
@@ -193,7 +195,7 @@ class NotifyDaemon(tornado.web.Application):
 
     def run(self):
         try:
-            self.listen(self.port)
+            self.listen(self.port, self.address)
         except socket.error:
             sys.exit(1)
 
