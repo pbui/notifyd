@@ -48,7 +48,7 @@ detect_screens() {
 dzen2_notify() {
     type=$1
     sender=$2
-    body=$3
+    body=$(echo $3 | sed 's/\^/\^\^/g')
 
     detect_screens | while read screen; do
 	width=$(echo $screen | awk '{print $1}')
