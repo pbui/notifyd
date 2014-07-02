@@ -99,6 +99,9 @@ class NotifyDaemon(tornado.web.Application):
         self.identifier = '{}:{}'.format(os.uname()[1], self.port)
         self.notify_scheduled = False
 
+        if not os.path.exists(self.files_path):
+            os.makedirs(self.files_path)
+
         self.add_handlers('', [
             (r'.*/files/(.*)' ,         tornado.web.StaticFileHandler, {'path': self.files_path}),
             (r'.*/messages' ,           MessagesHandler),
