@@ -13,13 +13,11 @@ import gobject
 
 import lxml.html
 
-
 # Default configuration --------------------------------------------------------
 
 DEFAULT_EXPIRE_TIMEOUT  = 5
 DEFAULT_APP_ICON        = 'notifyd'
 DEFAULT_LOGGER          = 'notifyd'
-
 
 # Renaming ---------------------------------------------------------------------
 
@@ -27,19 +25,16 @@ ICON_TABLE = {
     'drive-removable-media': 'udiskie',
 }
 
-
 # DBUS configuration -----------------------------------------------------------
 
 DBUS_SERVICE = 'org.freedesktop.Notifications'
 DBUS_PATH    = '/org/freedesktop/Notifications'
-
 
 # Strip HTML function ----------------------------------------------------------
 
 def strip_html(s):
     # http://stackoverflow.com/questions/753052/strip-html-from-strings-in-python
     return lxml.html.fromstring(s).text_content()
-
 
 # Notification service class ---------------------------------------------------
 
@@ -79,7 +74,6 @@ def notifyd_dbus():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     NotificationService()
     gobject.MainLoop().run()
-
 
 # Main execution ---------------------------------------------------------------
 

@@ -27,7 +27,6 @@ NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.s
 NOTIFYD_FILES_PATH      = os.path.expanduser('~/.config/notifyd/files')
 NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 
-
 # Messages Handler -------------------------------------------------------------
 
 class MessagesHandler(tornado.web.RequestHandler):
@@ -75,7 +74,6 @@ class MessagesHandler(tornado.web.RequestHandler):
             self.application.logger.error('could not read json: {}\n{}'.format(self.request.body, e))
 
         self.finish()
-
 
 # Notify Daemon ----------------------------------------------------------------
 
