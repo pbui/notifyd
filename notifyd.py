@@ -16,9 +16,7 @@ import tornado.gen
 import tornado.options
 import tornado.web
 
-#------------------------------------------------------------------------------
-# Defaults
-#------------------------------------------------------------------------------
+# Defaults ---------------------------------------------------------------------
 
 NOTIFYD_QUEUE_LENGTH    = 100       # Hundred messages
 NOTIFYD_PERIOD          = 1         # One second
@@ -29,9 +27,8 @@ NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.s
 NOTIFYD_FILES_PATH      = os.path.expanduser('~/.config/notifyd/files')
 NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 
-#------------------------------------------------------------------------------
-# Messages Handler
-#------------------------------------------------------------------------------
+
+# Messages Handler -------------------------------------------------------------
 
 class MessagesHandler(tornado.web.RequestHandler):
     finished = False
@@ -55,7 +52,9 @@ class MessagesHandler(tornado.web.RequestHandler):
             self.finish()
         else:
             self.application.logger.debug('GET timeout...')
-            tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(seconds=self.application.sleep), lambda: self.get(identifier, timeout))
+            tornado.ioloop.IOLoop.instance().add_timeout(
+                datetime.timedelta(seconds=self.application.sleep),
+                lambda: self.get(identifier, timeout))
 
     def on_connection_close(self):
         self.finished = True
@@ -77,9 +76,8 @@ class MessagesHandler(tornado.web.RequestHandler):
 
         self.finish()
 
-#------------------------------------------------------------------------------
-# Notify Daemon
-#------------------------------------------------------------------------------
+
+# Notify Daemon ----------------------------------------------------------------
 
 class NotifyDaemon(tornado.web.Application):
 
@@ -103,9 +101,9 @@ class NotifyDaemon(tornado.web.Application):
             os.makedirs(self.files_path)
 
         self.add_handlers('', [
-            (r'.*/files/(.*)' ,         tornado.web.StaticFileHandler, {'path': self.files_path}),
-            (r'.*/messages' ,           MessagesHandler),
-            (r'.*/messages/([\w:]+)' ,  MessagesHandler),
+            (r'.*/files/(.*)'       , tornado.web.StaticFileHandler, {'path': self.files_path}),
+            (r'.*/messages'         , MessagesHandler),
+            (r'.*/messages/([\w:]+)', MessagesHandler),
         ])
 
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
@@ -208,9 +206,7 @@ class NotifyDaemon(tornado.web.Application):
 
         self.ioloop.start()
 
-#------------------------------------------------------------------------------
-# Main Execution
-#------------------------------------------------------------------------------
+# Main Execution ---------------------------------------------------------------
 
 if __name__ == '__main__':
     tornado.options.define('debug', default=False, help='Enable debugging mode.')
