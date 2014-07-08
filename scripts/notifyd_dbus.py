@@ -5,59 +5,49 @@ import itertools
 import json
 import logging
 import requests
-import sys
-import time
 
 import dbus
 import dbus.mainloop.glib
 import dbus.service
-import glib
 import gobject
 
 import lxml.html
 
-#-------------------------------------------------------------------------------
-# Default configuration
-#-------------------------------------------------------------------------------
+
+# Default configuration --------------------------------------------------------
 
 DEFAULT_EXPIRE_TIMEOUT  = 5
 DEFAULT_APP_ICON        = 'notifyd'
 DEFAULT_LOGGER          = 'notifyd'
 
-#-------------------------------------------------------------------------------
-# Renaming
-#-------------------------------------------------------------------------------
+
+# Renaming ---------------------------------------------------------------------
 
 ICON_TABLE = {
     'drive-removable-media': 'udiskie',
 }
 
-#-------------------------------------------------------------------------------
-# DBUS configuration
-#-------------------------------------------------------------------------------
+
+# DBUS configuration -----------------------------------------------------------
 
 DBUS_SERVICE = 'org.freedesktop.Notifications'
 DBUS_PATH    = '/org/freedesktop/Notifications'
 
-#-------------------------------------------------------------------------------
-# Strip HTML function
-#-------------------------------------------------------------------------------
+
+# Strip HTML function ----------------------------------------------------------
 
 def strip_html(s):
     # http://stackoverflow.com/questions/753052/strip-html-from-strings-in-python
     return lxml.html.fromstring(s).text_content()
 
-#------------------------------------------------------------------------------
-# Notification service class
-#------------------------------------------------------------------------------
+
+# Notification service class ---------------------------------------------------
 
 class NotificationService(dbus.service.Object):
 
     def __init__(self):
 
-        dbus.service.Object.__init__(self,
-            dbus.service.BusName(DBUS_SERVICE, bus=dbus.SessionBus()),
-            DBUS_PATH)
+        dbus.service.Object.__init__(self, dbus.service.BusName(DBUS_SERVICE, bus=dbus.SessionBus()), DBUS_PATH)
 
         self.logger          = logging.getLogger(DEFAULT_LOGGER)
         self.counter         = itertools.count(0)
@@ -76,22 +66,22 @@ class NotificationService(dbus.service.Object):
         requests.post('http://127.0.0.1:9412/messages', data=json.dumps({
             'messages': [
                 {
-                     'type'  : ICON_TABLE.get(app_icon, app_icon),
-                     'sender': summary.strip(),
-                     'body'  : strip_html(body.strip()),
+                    'type'  : ICON_TABLE.get(app_icon, app_icon),
+                    'sender': summary.strip(),
+                    'body'  : strip_html(body.strip()),
                 }
             ],
         }))
         return next(self.counter)
+
 
 def notifyd_dbus():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     NotificationService()
     gobject.MainLoop().run()
 
-#------------------------------------------------------------------------------
-# Main execution
-#------------------------------------------------------------------------------
+
+# Main execution ---------------------------------------------------------------
 
 if __name__ == '__main__':
     notifyd_dbus()
