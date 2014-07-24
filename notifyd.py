@@ -190,7 +190,7 @@ class NotifyDaemon(tornado.web.Application):
 
             self.add_messages(messages)
         except (TypeError, ValueError, KeyError) as e:
-            self.logger.debug('could not read json: {}\n{}'.format(data, e))
+            self.logger.error('could not read json: {}\n{}'.format(data, e))
 
         self.ioloop.add_timeout(datetime.timedelta(seconds=self.sleep), lambda: self.pull(peer))
 
