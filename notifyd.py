@@ -63,7 +63,8 @@ class MessagesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self, timeout=None):
         try:
-            messages = json.loads(self.request.body.decode('UTF-8'))['messages']
+            data     = self.request.body.decode('UTF-8')
+            messages = json.loads(data)['messages']
             metadata = {u'notified': False, u'delivered': []}
 
             for message in messages:
@@ -71,7 +72,7 @@ class MessagesHandler(tornado.web.RequestHandler):
 
             self.application.add_messages(messages)
         except (ValueError, KeyError) as e:
-            self.application.logger.error('could not read json: {}\n{}'.format(self.request.body, e))
+            self.application.logger.error('could not read json: {}\n{}'.format(data, e))
 
         self.finish()
 
@@ -182,13 +183,14 @@ class NotifyDaemon(tornado.web.Application):
         self.logger.debug('Finishing pull...')
 
         try:
-            messages = json.loads(response.body)['messages']
+            data     = response.body.decode('UTF-8')
+            messages = json.loads(data)['messages']
             for message in messages:
                 message['notified'] = False
 
             self.add_messages(messages)
         except (TypeError, ValueError, KeyError) as e:
-            self.logger.debug('could not read json: {}\n{}'.format(response.body, e))
+            self.logger.debug('could not read json: {}\n{}'.format(data, e))
 
         self.ioloop.add_timeout(datetime.timedelta(seconds=self.sleep), lambda: self.pull(peer))
 
