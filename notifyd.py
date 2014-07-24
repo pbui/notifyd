@@ -71,8 +71,8 @@ class MessagesHandler(tornado.web.RequestHandler):
                 message.update(metadata)
 
             self.application.add_messages(messages)
-        except (ValueError, KeyError) as e:
-            self.application.logger.error('could not read json: {}\n{}'.format(data, e))
+        except (AttributeError, ValueError, KeyError) as e:
+            self.application.logger.error('could not read json: {}\n'.format(e))
 
         self.finish()
 
@@ -190,7 +190,7 @@ class NotifyDaemon(tornado.web.Application):
 
             self.add_messages(messages)
         except (AttributeError, TypeError, ValueError, KeyError) as e:
-            self.logger.error('could not read json: {}\n{}'.format(data, e))
+            self.logger.error('could not read json: {}\n'.format(e))
 
         self.ioloop.add_timeout(datetime.timedelta(seconds=self.sleep), lambda: self.pull(peer))
 
