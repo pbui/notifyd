@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 import collections
 import itertools
@@ -9,7 +9,11 @@ import requests
 import dbus
 import dbus.mainloop.glib
 import dbus.service
-import gobject
+
+try:
+    import gobject
+except ImportError:
+    from gi.repository import GObject as gobject
 
 import lxml.html
 
