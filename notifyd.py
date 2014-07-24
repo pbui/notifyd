@@ -63,7 +63,7 @@ class MessagesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self, timeout=None):
         try:
-            messages = json.loads(self.request.body)['messages']
+            messages = json.loads(self.request.body.decode('UTF-8'))['messages']
             metadata = {u'notified': False, u'delivered': []}
 
             for message in messages:
