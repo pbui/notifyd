@@ -105,8 +105,6 @@ class NotifyDaemon(tornado.web.Application):
             (r'.*/messages/([\w:]+)', MessagesHandler),
         ])
 
-        signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-
     def _execute_daemon(self, argv):
         try:
             pid = os.fork()         # Fork 1
@@ -203,6 +201,8 @@ class NotifyDaemon(tornado.web.Application):
             self.listen(self.port, self.address)
         except socket.error:
             sys.exit(1)
+
+        signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
         for peer in self.peers:
             self.logger.debug('Pulling from {}'.format(peer))
