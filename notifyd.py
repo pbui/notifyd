@@ -147,7 +147,10 @@ class NotifyDaemon(tornado.web.Application):
             elif type in ('VOLUME'):
                 bodies = [bodies[-1]]
 
+            sender = sender.encode('UTF-8')
+
             for body in bodies:
+                body = body.encode('UTF-8')
                 self._execute_daemon([self.script, type, sender, body])
 
     def add_messages(self, messages):
