@@ -6,7 +6,7 @@ for file in "$@"; do
     TYPE=WWW
     SENDER=file
     NAME=$(basename $file)
-    BODY=http://localhost:9411/files/$NAME
+    BODY=http://localhost:9412/files/$NAME
 
     if ! cp "$file" $FILES_PATH/$NAME; then
     	continue
