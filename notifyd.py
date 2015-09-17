@@ -76,6 +76,13 @@ class MessagesHandler(tornado.web.RequestHandler):
 
         self.finish()
 
+# StaticFileHandler ------------------------------------------------------------
+
+class StaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Disable cache
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+
 # Notify Daemon ----------------------------------------------------------------
 
 class NotifyDaemon(tornado.web.Application):
@@ -100,7 +107,7 @@ class NotifyDaemon(tornado.web.Application):
             os.makedirs(self.files_path)
 
         self.add_handlers('', [
-            (r'.*/files/(.*)'       , tornado.web.StaticFileHandler, {'path': self.files_path}),
+            (r'.*/files/(.*)'       , StaticFileHandler, {'path': self.files_path}),
             (r'.*/messages'         , MessagesHandler),
             (r'.*/messages/([\w:]+)', MessagesHandler),
         ])
