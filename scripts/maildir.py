@@ -55,7 +55,10 @@ LISTID_BLACKLIST = [
 #------------------------------------------------------------------------------
 
 def filter_message(path):
-    if 'Spam' in path or 'Sent' in path or 'new' not in path:
+    if ('Spam' in path or
+        'Sent' in path or
+        'Trash' in path or
+        'new' not in path):
         return None, None
 
     message = email.message_from_file(open(path, 'r'))
