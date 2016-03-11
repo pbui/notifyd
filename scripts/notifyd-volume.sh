@@ -40,4 +40,4 @@ if [ "$command" = "mute" ]; then
     fi
 fi
 
-notifyd_send "VOLUME" "${display_volume}"
+notifyd-send "VOLUME" "${display_volume}"

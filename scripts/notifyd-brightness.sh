@@ -9,4 +9,4 @@ case "$1" in
     ;;
 esac
 
-notifyd_send BRIGHTNESS $(xbacklight -get)%
+notifyd-send BRIGHTNESS $(xbacklight -get)%

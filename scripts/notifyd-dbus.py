@@ -26,7 +26,8 @@ DEFAULT_LOGGER          = 'notifyd'
 # Renaming ---------------------------------------------------------------------
 
 ICON_TABLE = {
-    'drive-removable-media': 'udiskie',
+    'drive-removable-media' : 'GVFS',
+    'drive-harddisk-usb'    : 'GVFS',
 }
 
 # DBUS configuration -----------------------------------------------------------
@@ -62,7 +63,7 @@ class NotificationService(dbus.service.Object):
     def Notify(self, app_name, replaces_id, app_icon, summary, body, actions, hints, expire_timeout):
         self.logger.debug('Notify')
         app_icon = app_icon or 'NOTIFYD'
-        requests.post('http://127.0.0.1:9412/messages', data=json.dumps({
+        requests.post('http://127.0.0.1:9411/messages', data=json.dumps({
             'messages': [
                 {
                     'type'  : ICON_TABLE.get(app_icon, app_icon),
