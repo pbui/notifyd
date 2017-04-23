@@ -13,7 +13,11 @@ DZEN2_FONTNAME='-*-tamzen-medium-*-*-*-15-*-*-*-*-*-*-*'
 DZEN2_TIMEOUT=5
 
 SCREEN_CACHE_TIMEOUT="60"
-SCREEN_CACHE_FILE="${XDG_RUNTIME_DIR}/xrandr.screens"
+SCREEN_CACHE_FILE="${XDG_RUNTIME_DIR:-$HOME/.cache}/xrandr.screens"
+
+if [ -z "$DISPLAY" ]; then
+    export DISPLAY=:0.0
+fi
 
 if [ "$(uname)" = "Linux" ]; then
     STAT_MTIME="stat -c %s"
