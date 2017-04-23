@@ -106,10 +106,10 @@ class NotifyDaemon(tornado.web.Application):
         if not os.path.exists(self.files_path):
             os.makedirs(self.files_path)
 
-        self.add_handlers('', [
-            (r'.*/files/(.*)'       , StaticFileHandler, {'path': self.files_path}),
-            (r'.*/messages'         , MessagesHandler),
-            (r'.*/messages/([\w:]+)', MessagesHandler),
+        self.add_handlers(r'.*', [
+            (r'/files/(.*)'       , StaticFileHandler, {'path': self.files_path}),
+            (r'/messages'         , MessagesHandler),
+            (r'/messages/([\w:]+)', MessagesHandler),
         ])
 
     def _execute_daemon(self, argv):
