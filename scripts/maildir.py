@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 import requests
+import re
 
 #------------------------------------------------------------------------------
 # Configuration
@@ -15,40 +16,14 @@ import requests
 TIMEOUT          = 5 * 60
 SENDER_BLACKLIST = []
 LISTID_BLACKLIST = [
-    'arch-announce',
-    'arch-general',
-    'arch-dev-public',
-    'aur-dev',
-    'aur-general',
-    'current-users.netbsd.org',
-    'netbsd-advocacy.netbsd.org',
-    'netbsd-users.netbsd.org',
-    'pkgsrc-users.netbsd.org',
-    'port-amd64.netbsd.org',
-    'port-i386.netbsd.org',
-    'port-xen.netbsd.org',
-    'source-changes-digest.netbsd.org',
-    'tech-kern.netbsd.org',
-    'tech-misc.netbsd.org',
-    'tech-multimedia.netbsd.org',
-    'tech-net.netbsd.org',
-    'tech-pkg.netbsd.org',
-    'tech-toolchain.netbsd.org',
-    'tech-userlevel.netbsd.org',
-    'tech-x11.netbsd.org',
-    'python-announce',
-    'python-dev',
-    'python-list',
-    'conferences.python.org',
-    'advocacy.openbsd.org',
-    'misc.openbsd.org',
-    'ports.openbsd.org',
-    'ports-changes.openbsd.org',
-    'source-changes.openbsd.org',
-    'tech.openbsd.org',
-    'centos-announce.centos.org',
-    'centos.centos.org',
+    'arch-.*',
+    'aur-.*',
+    '.*\.netbsd\.org',
+    'python-.*',
+    '.*\.openbsd\.org',
+    '.*\.centos\.org',
 ]
+MAILDIRS        = ('cur', 'new', 'tmp')
 
 #------------------------------------------------------------------------------
 # Walk maildir and notify of new messages
@@ -59,6 +34,9 @@ def filter_message(path):
         'Sent' in path or
         'Trash' in path or
         'new' not in path):
+        return None, None
+
+    if time.time() - os.path.getmtime(path) >= TIMEOUT:
         return None, None
 
     message = email.message_from_file(open(path, 'r'))
@@ -75,12 +53,9 @@ def filter_message(path):
 
     if 'list-id' in message:
         list_id = message['list-id'].lower()
-        for l in LISTID_BLACKLIST:
-            if l in list_id:
+        for rx in LISTID_BLACKLIST:
+            if re.search(rx, list_id, re.IGNORECASE):
                 return None, None
-
-    if time.time() - os.path.getmtime(path) >= TIMEOUT:
-        return None, None
 
     return sender, subject
 
@@ -88,6 +63,16 @@ def notify_maildir(maildir):
     messages = []
 
     for root, dirs, files in os.walk(maildir):
+        if os.path.basename(root) in ('cur', 'tmp'):
+            continue
+
+        if len(dirs) > 3:
+            for maildir in MAILDIRS:
+                try:
+                    os.rmdir(os.path.join(root, maildir))
+                except OSError:
+                    pass
+
         for file in files:
             sender, subject = filter_message(os.path.join(root, file))
             if sender and subject:
