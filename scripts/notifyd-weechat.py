@@ -23,7 +23,7 @@ weechat.hook_print("", "irc_privmsg", "", 1, "get_notified", "")
 
 # Functions
 
-def write_notifyd_message(sender, message):
+def write_notifyd_message(sender, message, channel=None):
     message = message.replace('\n', ' ')
     sender  = sender.strip()
     if sender == '*':
@@ -33,7 +33,7 @@ def write_notifyd_message(sender, message):
     requests.post('http://localhost:9411/messages', data=json.dumps({
         'messages': [
             {
-                'type'  : 'CHAT',
+                'type'  : channel or 'CHAT',
                 'sender': sender,
                 'body'  : message,
             }
@@ -44,8 +44,8 @@ def get_notified(data, bufferp, uber_empty, tagsn, isdisplayed, ishilight, prefi
     buffer = weechat.buffer_get_string(bufferp, "short_name") or \
              weechat.buffer_get_string(bufferp, "name")
 
-    prefix = prefix.replace('@', '')\
-                   .replace('+', '')
+    if prefix.startswith('@') or prefix.startswith('+') or prefix.startswith('%'):
+        prefix = prefix[1:]
 
     if weechat.buffer_get_string(bufferp, "localvar_type") == "private" and \
        weechat.config_get_plugin('show_priv_msg') == "on":
@@ -55,7 +55,7 @@ def get_notified(data, bufferp, uber_empty, tagsn, isdisplayed, ishilight, prefi
         write_notifyd_message(prefix, message)
     elif buffer in weechat.config_get_plugin('show_channels').split(',') and \
         prefix not in weechat.config_get_plugin('ignore_nicks').split(','):
-        write_notifyd_message(prefix, message)
+        write_notifyd_message(prefix, message, buffer)
     return weechat.WEECHAT_RC_OK
 
 # vim: expandtab ft=python
