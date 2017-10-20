@@ -60,9 +60,9 @@ dzen2_notify() {
 	x=$(echo $screen | awk '{print $2}')
 	y=$(echo $screen | awk '{print $3}')
 
-	message="^bg(#1793D1) ${type} ^bg() ${sender}"
+	message="^bg(#00BCD4) ${type} ^bg() ${sender}"
 	if [ -n "${body}" ]; then
-	    message="${message}^fg(#1793D1) | ^fg()${body}"
+	    message="${message}^fg(#00BCD4) | ^fg()${body}"
 	fi
 
 	echo ${message} | dzen2 \
