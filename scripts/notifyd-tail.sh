@@ -4,11 +4,11 @@
 
 TAIL=""
 if [ -r $HOME/.config/notifyd/log/current ]; then
-    TAIL="tail -F $HOME/.config/notifyd/log/current"
+    tail -F $HOME/.config/notifyd/log/current | sed -En 's/.*\s+(\[[^IW].*)/\1/p'
+elif command -v journalctl > /dev/null 2>&1; then
+    journalctl -n 10 --user --user-unit=notifyd -f | sed -En 's/.*:\s+(\[[^IW].*)/\1/p' 
+else
+    echo "Unable to locate notification log"
+    exit 1
 fi
 
-if command journalctl 2> /dev/null; then
-    TAIL="journalctl --user --user-unit=notifyd -f"
-fi
-
-$TAIL | sed -En 's/.*: (\[[^IW].*)/\1/p' 
