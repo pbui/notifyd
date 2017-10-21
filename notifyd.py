@@ -169,9 +169,9 @@ class NotifyDaemon(tornado.web.Application):
             sender = message['sender']
             body   = message['body']
             if not body:
-                formatted_messages.append(u'[{:^12}] {:>12}'.format(type, sender))
+                formatted_messages.append(u'[{:^12}] {:>16}'.format(type, sender))
             else:
-                formatted_messages.append(u'[{:^12}] {:>12} | {}'.format(type, sender, body))
+                formatted_messages.append(u'[{:^12}] {:>16} | {}'.format(type, sender, body))
 
         self.logger.info(u'Added {} message(s)...\n{}'.format(len(messages), '\n'.join(formatted_messages)))
 
