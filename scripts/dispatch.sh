@@ -7,6 +7,10 @@ SENDER=$2
 shift 2
 BODY=$*
 
+if [ -z "$BODY" ]; then
+    BODY=$SENDER
+fi
+
 case ${TYPE} in
     IMAGE|WWW)
         exec xdg-open "${BODY}" > /dev/null 2>&1
