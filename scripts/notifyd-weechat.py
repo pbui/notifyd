@@ -30,6 +30,10 @@ def write_notifyd_message(sender, message, channel=None):
         mlist   = message.split()
         sender  = mlist[0]
         message = ' '.join(mlist[1:])
+
+    if sender in weechat.config_get_plugin('ignore_nicks').split(','):
+        return
+
     requests.post('http://localhost:9411/messages', data=json.dumps({
         'messages': [
             {
@@ -53,9 +57,9 @@ def get_notified(data, bufferp, uber_empty, tagsn, isdisplayed, ishilight, prefi
             write_notifyd_message(prefix, message)
     elif ishilight == "1" and weechat.config_get_plugin('show_highlight') == "on":
         write_notifyd_message(prefix, message)
-    elif buffer in weechat.config_get_plugin('show_channels').split(',') and \
-        prefix not in weechat.config_get_plugin('ignore_nicks').split(','):
+    elif buffer in weechat.config_get_plugin('show_channels').split(','):
         write_notifyd_message(prefix, message, buffer)
+
     return weechat.WEECHAT_RC_OK
 
 # vim: expandtab ft=python
