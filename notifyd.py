@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 import collections
 import datetime
@@ -42,7 +42,7 @@ class MessagesHandler(tornado.web.RequestHandler):
 
         if filtered or time.time() >= timeout:
             try:
-                self.write(json.dumps({u'messages': filtered}))
+                self.write(json.dumps({'messages': filtered}))
                 for message in filtered:
                     message['delivered'].append(identifier)
                 self.application.logger.debug('sent json: {}'.format(filtered))
@@ -65,7 +65,7 @@ class MessagesHandler(tornado.web.RequestHandler):
         try:
             data     = self.request.body.decode('UTF-8')
             messages = json.loads(data)['messages']
-            metadata = {u'notified': False, u'delivered': []}
+            metadata = {'notified': False, 'delivered': []}
 
             for message in messages:
                 message.update(metadata)
@@ -169,11 +169,11 @@ class NotifyDaemon(tornado.web.Application):
             sender = message['sender']
             body   = message['body']
             if not body:
-                formatted_messages.append(u'[{:^12}] {:>16}'.format(type, sender))
+                formatted_messages.append('[{:^12}] {:>16}'.format(type, sender))
             else:
-                formatted_messages.append(u'[{:^12}] {:>16} | {}'.format(type, sender, body))
+                formatted_messages.append('[{:^12}] {:>16} | {}'.format(type, sender, body))
 
-        self.logger.info(u'Added {} message(s)...\n{}'.format(len(messages), '\n'.join(formatted_messages)))
+        self.logger.info('Added {} message(s)...\n{}'.format(len(messages), '\n'.join(formatted_messages)))
 
         if not self.notify_scheduled:
             self.ioloop.add_timeout(datetime.timedelta(seconds=self.period), self.notify)
