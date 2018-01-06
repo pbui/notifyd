@@ -138,6 +138,7 @@ class NotifyDaemon(tornado.web.Application):
         self.notify_scheduled = False
 
         if not os.path.exists(self.script):
+            self.logger.warning('Unable to find notification script: {}'.format(self.script))
             return
 
         groups    = collections.defaultdict(list)
