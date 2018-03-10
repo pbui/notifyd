@@ -53,7 +53,7 @@ def get_notified(data, bufferp, uber_empty, tagsn, isdisplayed, ishilight, prefi
 
     if weechat.buffer_get_string(bufferp, "localvar_type") == "private" and \
        weechat.config_get_plugin('show_priv_msg') == "on":
-        if buffer == prefix:
+        if prefix in buffer:
             write_notifyd_message(prefix, message)
     elif ishilight == "1" and weechat.config_get_plugin('show_highlight') == "on":
         write_notifyd_message(prefix, message)
