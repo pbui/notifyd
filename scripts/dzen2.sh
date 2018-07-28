@@ -7,8 +7,9 @@ set -f
 # Constant Defaults
 #------------------------------------------------------------------------------
 
-DZEN2_BACKGROUND='#000000'
-DZEN2_FOREGROUND='#fafafa'
+DZEN2_BACKGROUND='#2e3440'
+DZEN2_FOREGROUND='#eceff4'
+DZEN2_HIGHLIGHT='#88c0d0'
 DZEN2_FONTNAME='-*-tamzen-medium-*-*-*-15-*-*-*-*-*-*-*'
 DZEN2_TIMEOUT=5
 
@@ -60,9 +61,9 @@ dzen2_notify() {
 	x=$(echo $screen | awk '{print $2}')
 	y=$(echo $screen | awk '{print $3}')
 
-	message="^bg(#00BCD4) ${type} ^bg() ${sender}"
+	message="^bg(${DZEN2_HIGHLIGHT}) ${type} ^bg() ${sender}"
 	if [ -n "${body}" ]; then
-	    message="${message}^fg(#00BCD4) | ^fg()${body}"
+	    message="${message}^fg(${DZEN2_HIGHLIGHT}) | ^fg()${body}"
 	fi
 
 	echo ${message} | dzen2 \
