@@ -10,7 +10,7 @@ set -f
 DZEN2_BACKGROUND='#2e3440'
 DZEN2_FOREGROUND='#eceff4'
 DZEN2_HIGHLIGHT='#88c0d0'
-DZEN2_FONTNAME='-*-tamzen-medium-*-*-*-15-*-*-*-*-*-*-*'
+DZEN2_FONTNAME='Source Code Pro;:pixelsize=12'
 DZEN2_TIMEOUT=5
 
 SCREEN_CACHE_TIMEOUT="60"
