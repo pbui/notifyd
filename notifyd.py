@@ -148,8 +148,12 @@ class NotifyDaemon(tornado.web.Application):
             mtype   = message['type']
             msender = message['sender'].strip()
 
-            if previous and not msender:
-                msender = previous
+            if not msender:
+                # Skip empty sender if there is no previous
+                if previous:
+                    msender = previous
+                else:
+                    continue
 
             groups[(mtype, msender)].append(message['body'])
             message['notified'] = True
@@ -175,9 +179,11 @@ class NotifyDaemon(tornado.web.Application):
             message['type'] = message['type'].upper()
 
             type   = message['type']
-            sender = message['sender']
-            body   = message['body']
-            if not body:
+            sender = message['sender'].strip()
+            body   = message['body'].strip()
+            if not sender:
+                continue    # Skip empty sender
+            elif not body:
                 formatted_messages.append('[{:^12}] {:>16}'.format(type, sender))
             else:
                 formatted_messages.append('[{:^12}] {:>16} | {}'.format(type, sender, body))
