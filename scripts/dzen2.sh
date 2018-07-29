@@ -10,7 +10,7 @@ set -f
 DZEN2_BACKGROUND='#2e3440'
 DZEN2_FOREGROUND='#eceff4'
 DZEN2_HIGHLIGHT='#88c0d0'
-DZEN2_FONTNAME='Source Code Pro;:pixelsize=12'
+DZEN2_FONTNAME='Source Code Pro:pixelsize=13'
 DZEN2_TIMEOUT=5
 
 SCREEN_CACHE_TIMEOUT="60"
@@ -61,7 +61,7 @@ dzen2_notify() {
 	x=$(echo $screen | awk '{print $2}')
 	y=$(echo $screen | awk '{print $3}')
 
-	message="^bg(${DZEN2_HIGHLIGHT}) ${type} ^bg() ${sender}"
+        message="^bg(${DZEN2_HIGHLIGHT})^fg(${DZEN2_BACKGROUND}) ${type} ^bg()^fg() ${sender}"
 	if [ -n "${body}" ]; then
 	    message="${message}^fg(${DZEN2_HIGHLIGHT}) | ^fg()${body}"
 	fi
