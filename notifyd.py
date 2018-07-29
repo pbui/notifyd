@@ -143,9 +143,17 @@ class NotifyDaemon(tornado.web.Application):
 
         groups    = collections.defaultdict(list)
         filtered  = (m for m in self.messages if not m['notified'])
+        previous  = None
         for message in filtered:
-            groups[(message['type'], message['sender'])].append(message['body'])
+            mtype   = message['type']
+            msender = message['sender'].strip()
+
+            if previous and not msender:
+                msender = previous
+
+            groups[(mtype, msender)].append(message['body'])
             message['notified'] = True
+            previous = msender
 
         for (type, sender), bodies in groups.items():
             if type in ('CHAT', 'MAIL'):
