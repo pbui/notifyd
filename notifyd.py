@@ -143,21 +143,9 @@ class NotifyDaemon(tornado.web.Application):
 
         groups    = collections.defaultdict(list)
         filtered  = (m for m in self.messages if not m['notified'])
-        previous  = None
         for message in filtered:
-            mtype   = message['type']
-            msender = message['sender'].strip()
-
-            if not msender:
-                # Skip empty sender if there is no previous
-                if previous:
-                    msender = previous
-                else:
-                    continue
-
-            groups[(mtype, msender)].append(message['body'])
+            groups[(message['type'], message['sender'])].append(message['body'])
             message['notified'] = True
-            previous = msender
 
         for (type, sender), bodies in groups.items():
             if type in ('CHAT', 'MAIL'):
@@ -179,11 +167,9 @@ class NotifyDaemon(tornado.web.Application):
             message['type'] = message['type'].upper()
 
             type   = message['type']
-            sender = message['sender'].strip()
-            body   = message['body'].strip()
-            if not sender:
-                continue    # Skip empty sender
-            elif not body:
+            sender = message['sender']
+            body   = message['body']
+            if not body:
                 formatted_messages.append('[{:^12}] {:>16}'.format(type, sender))
             else:
                 formatted_messages.append('[{:^12}] {:>16} | {}'.format(type, sender, body))
