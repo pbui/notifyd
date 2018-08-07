@@ -26,8 +26,9 @@ DEFAULT_LOGGER          = 'notifyd'
 # Renaming ---------------------------------------------------------------------
 
 ICON_TABLE = {
-    'drive-removable-media' : 'GVFS',
-    'drive-harddisk-usb'    : 'GVFS',
+    'drive-removable-media-usb' : 'GVFS',
+    'drive-removable-media'     : 'GVFS',
+    'drive-harddisk-usb'        : 'GVFS',
 }
 
 # DBUS configuration -----------------------------------------------------------
