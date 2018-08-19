@@ -7,6 +7,7 @@ import logging
 import os
 import signal
 import socket
+import subprocess
 import sys
 import time
 
@@ -112,28 +113,6 @@ class NotifyDaemon(tornado.web.Application):
             (r'/messages/([\w:]+)', MessagesHandler),
         ])
 
-    def _execute_daemon(self, argv):
-        try:
-            pid = os.fork()         # Fork 1
-            if pid > 0:             # Parent returns
-                return
-        except OSError as e:
-            self.logger.error('Unable to fork: {}'.format(e))
-            return
-
-        os.setsid()                 # New session group
-
-        try:
-            pid = os.fork()         # Fork 2
-            if pid > 0:             # Parent exits
-                sys.exit(0)
-        except OSError as e:
-            self.logger.error('Unable to fork: {}'.format(e))
-            sys.exit(1)
-
-        os.execvp(argv[0], argv)    # Child execs
-        sys.exit(1)
-
     def notify(self):
         self.notify_scheduled = False
 
@@ -153,11 +132,10 @@ class NotifyDaemon(tornado.web.Application):
             elif type in ('VOLUME'):
                 bodies = [bodies[-1]]
 
-            sender = sender.encode('UTF-8')
-
+            sender = sender.encode('utf-8')
             for body in bodies:
-                body = body.encode('UTF-8')
-                self._execute_daemon([self.script, type, sender, body])
+                body = body.encode('utf-8')
+                subprocess.run([self.script, type, sender, body], close_fds=True)
 
     def add_messages(self, messages):
         self.messages.extend(messages)
