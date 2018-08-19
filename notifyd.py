@@ -199,6 +199,9 @@ class NotifyDaemon(tornado.web.Application):
 # Main Execution ---------------------------------------------------------------
 
 if __name__ == '__main__':
+    sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=True)
+    sys.stderr = open(sys.stderr.fileno(), mode='w', encoding='utf8', buffering=True)
+
     tornado.options.define('debug', default=False, help='Enable debugging mode.')
     tornado.options.define('port', default=NOTIFYD_PORT, help='Port to listen on.')
     tornado.options.define('peers', default=None, multiple=True, help='List of peers to pull message from.')
