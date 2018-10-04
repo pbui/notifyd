@@ -7,7 +7,7 @@ disable() {
 
 enable() {
     xinput enable $ID
-    xinput set-prop $ID "libinput Scroll Method Enabled" 0, 1, 0
+    #xinput set-prop $ID "libinput Scroll Method Enabled" 0, 1, 0
     notifyd-send TOUCHPAD Enabled
 }
 
@@ -19,7 +19,7 @@ toggle() {
     fi
 }
 
-ID=$(xinput | grep TouchPad | cut -d = -f 2 | awk '{print $1}')
+ID=$(xinput | grep -i Touchpad | cut -d = -f 2 | awk '{print $1}')
 
 case $1 in
 enable)	    enable;;
