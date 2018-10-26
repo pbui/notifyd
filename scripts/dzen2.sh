@@ -7,11 +7,17 @@ set -f
 # Constant Defaults
 #------------------------------------------------------------------------------
 
-DZEN2_BACKGROUND='#2e3440'
-DZEN2_FOREGROUND='#eceff4'
-DZEN2_HIGHLIGHT='#88c0d0'
-DZEN2_FONTNAME='Source Code Pro:pixelsize=13'
-DZEN2_TIMEOUT=5
+DZEN2_BACKGROUND="${DZEN2_BACKGROUND:=#252525}"
+DZEN2_FOREGROUND="${DZEN2_FOREGROUND:=#00bcd4}"
+DZEN2_HIGHLIGHT_FG="${DZEN2_HIGHLIGHT_FG:=${DZEN2_FOREGROUND}}"
+DZEN2_HIGHLIGHT_BG="${DZEN2_HIGHLIGHT_BG:=#353535}"
+DZEN2_FONTNAME="${DZEN2_FONTNAME:='Tamzen:pixelsize=15'}"
+DZEN2_TIMEOUT="${DZEN2_TIMEOUT:=5}"
+
+WIDTH_OFFSET="${DZEN2_WIDTH_OFFSET:=0}"
+HEIGHT="${DZEN2_HEIGHT:=25}"
+X_OFFSET="${DZEN2_X_OFFSET:=0}"
+Y_OFFSET="${DZEN2_Y_OFFSET:=0}"
 
 SCREEN_CACHE_TIMEOUT="60"
 SCREEN_CACHE_FILE="${XDG_RUNTIME_DIR:-$HOME/.cache}/xrandr.screens"
@@ -57,23 +63,25 @@ dzen2_notify() {
     body=$(echo $3 | sed 's/\^/\^\^/g')
 
     detect_screens | while read screen; do
-	width=$(echo $screen | awk '{print $1}')
-	x=$(echo $screen | awk '{print $2}')
-	y=$(echo $screen | awk '{print $3}')
+        width=$(expr `echo $screen | awk '{print $1}'` - ${WIDTH_OFFSET})
+        height=${HEIGHT:=}
+	x=${X_OFFSET:=$(echo $screen | awk '{print $2}')}
+	y=${Y_OFFSET:=$(echo $screen | awk '{print $3}')}
 
-        message="^bg(${DZEN2_HIGHLIGHT})^fg(${DZEN2_BACKGROUND}) ${type} ^bg()^fg() ${sender}"
+        message="^bg(${DZEN2_HIGHLIGHT_BG})^fg(${DZEN2_HIGHLIGHT_FG}) ${type} ^bg()^fg() ${sender}"
 	if [ -n "${body}" ]; then
-	    message="${message}^fg(${DZEN2_HIGHLIGHT}) | ^fg()${body}"
+            message="${message}^fg(${DZEN2_FOREGROUND})^bg(${DZEN_BACKGROUND}) | ^fg()${body}"
 	fi
 
 	echo ${message} | dzen2 \
 	    -e 'button1=exit:1;key_Escape=ungrabkeys,exit;leavetitle=exit;' \
 	    -w  ${width}		\
+	    -h  ${height}		\
 	    -ta l			\
 	    -bg "${DZEN2_BACKGROUND}"	\
 	    -fg "${DZEN2_FOREGROUND}"	\
 	    -fn "${DZEN2_FONTNAME}"	\
-	    -p  ${DZEN2_TIMEOUT}	\
+	    -p  "${DZEN2_TIMEOUT}"	\
 	    -x  ${x}			\
 	    -y  ${y} &
     done

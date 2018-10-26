@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import collections
 import datetime
 import json
@@ -10,6 +9,7 @@ import socket
 import subprocess
 import sys
 import time
+import yaml
 
 import tornado.ioloop
 import tornado.httpclient
@@ -27,6 +27,19 @@ NOTIFYD_ADDRESS         = 'localhost'
 NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
 NOTIFYD_FILES_PATH      = os.path.expanduser('~/.config/notifyd/files')
 NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
+NOTIFYD_CONFIG_FILENAME = os.path.expanduser('~/.config/notifyd/config.yaml')
+
+# Utilities --------------------------------------------------------------------
+
+#def parse_config(filename):
+#    if not os.path.isfile(filename):
+#        return
+#
+#    with open(filename, 'r') as config:
+#        vars = yaml.load(config)
+#
+#    for var, value in vars.items():
+#        os.environ[var] = str(value)
 
 # Messages Handler -------------------------------------------------------------
 
@@ -100,18 +113,33 @@ class NotifyDaemon(tornado.web.Application):
         self.script     = settings.get('script', NOTIFYD_SCRIPT)
         self.peers      = settings.get('peers', [])
         self.files_path = settings.get('files_path', NOTIFYD_FILES_PATH)
+        self.config     = settings.get('config', NOTIFYD_CONFIG_FILENAME)
         self.ioloop     = tornado.ioloop.IOLoop.instance()
         self.identifier = '{}:{}'.format(os.uname()[1], self.port)
         self.notify_scheduled = False
 
+        # TODO: be able to pass at command line arguments
+
         if not os.path.exists(self.files_path):
             os.makedirs(self.files_path)
+
+        self.parse_config()
 
         self.add_handlers(r'.*', [
             (r'/files/(.*)'       , StaticFileHandler, {'path': self.files_path}),
             (r'/messages'         , MessagesHandler),
             (r'/messages/([\w:]+)', MessagesHandler),
         ])
+
+    def parse_config(self):
+        if not os.path.isfile(self.config):
+            return
+
+        with open(self.config, 'r') as config:
+            vars = yaml.load(config)
+
+        for var, value in vars.items():
+            os.environ[var] = str(value)
 
     def notify(self):
         self.notify_scheduled = False
@@ -206,6 +234,7 @@ if __name__ == '__main__':
     tornado.options.define('port', default=NOTIFYD_PORT, help='Port to listen on.')
     tornado.options.define('peers', default=None, multiple=True, help='List of peers to pull message from.')
     tornado.options.define('files_path', default=NOTIFYD_FILES_PATH, help='Path to files directory.')
+    tornado.options.define('config', default=NOTIFYD_CONFIG_FILENAME, help='Path to configuration yaml file.')
     tornado.options.parse_command_line()
 
     options = tornado.options.options.as_dict()
