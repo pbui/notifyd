@@ -94,21 +94,21 @@ class NotifyDaemon(tornado.web.Application):
         self.logger     = logging.getLogger()
         self.sleep      = settings.get('sleep', NOTIFYD_SLEEP)
         self.period     = settings.get('period', NOTIFYD_PERIOD)
-        self.port       = settings.get('port', NOTIFYD_PORT)
-        self.address    = settings.get('address', NOTIFYD_ADDRESS)
+        self.port       = settings.get('port') or NOTIFYD_PORT
+        self.address    = settings.get('address') or NOTIFYD_ADDRESS
         self.peers      = settings.get('peers', [])
-        self.config_dir = settings.get('config_dir', NOTIFYD_CONFIG_DIR)
+        self.config_dir = settings.get('config_dir') or NOTIFYD_CONFIG_DIR
         self.script     = os.path.join(self.config_dir, 'scripts', 'notify.sh')
-        self.files_path = os.path.join(self.config_dir, 'files')
+        self.files_dir  = os.path.join(self.config_dir, 'files')
         self.ioloop     = tornado.ioloop.IOLoop.instance()
         self.identifier = '{}:{}'.format(os.uname()[1], self.port)
         self.notify_scheduled = False
 
-        if not os.path.exists(self.files_path):
-            os.makedirs(self.files_path)
+        if not os.path.exists(self.files_dir):
+            os.makedirs(self.files_dir)
 
         self.add_handlers(r'.*', [
-            (r'/files/(.*)'       , StaticFileHandler, {'path': self.files_path}),
+            (r'/files/(.*)'       , StaticFileHandler, {'path': self.files_dir}),
             (r'/messages'         , MessagesHandler),
             (r'/messages/([\w:]+)', MessagesHandler),
         ])
