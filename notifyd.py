@@ -17,18 +17,17 @@ import tornado.gen
 import tornado.options
 import tornado.web
 
-# Defaults ---------------------------------------------------------------------
+# Defaults
 
 NOTIFYD_QUEUE_LENGTH    = 100       # Hundred messages
 NOTIFYD_PERIOD          = 1         # One second
 NOTIFYD_SLEEP           = 5         # Five seconds
 NOTIFYD_PORT            = 9411
 NOTIFYD_ADDRESS         = 'localhost'
-NOTIFYD_SCRIPT          = os.path.expanduser('~/.config/notifyd/scripts/notify.sh')
-NOTIFYD_FILES_PATH      = os.path.expanduser('~/.config/notifyd/files')
+NOTIFYD_CONFIG_DIR      = os.path.expanduser('~/.config/notifyd')
 NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 
-# Messages Handler -------------------------------------------------------------
+# Messages Handler
 
 class MessagesHandler(tornado.web.RequestHandler):
     finished = False
@@ -77,14 +76,14 @@ class MessagesHandler(tornado.web.RequestHandler):
 
         self.finish()
 
-# StaticFileHandler ------------------------------------------------------------
+# StaticFileHandler
 
 class StaticFileHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
         # Disable cache
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
-# Notify Daemon ----------------------------------------------------------------
+# Notify Daemon
 
 class NotifyDaemon(tornado.web.Application):
 
@@ -97,9 +96,10 @@ class NotifyDaemon(tornado.web.Application):
         self.period     = settings.get('period', NOTIFYD_PERIOD)
         self.port       = settings.get('port', NOTIFYD_PORT)
         self.address    = settings.get('address', NOTIFYD_ADDRESS)
-        self.script     = settings.get('script', NOTIFYD_SCRIPT)
         self.peers      = settings.get('peers', [])
-        self.files_path = settings.get('files_path', NOTIFYD_FILES_PATH)
+        self.config_dir = settings.get('config_dir', NOTIFYD_CONFIG_DIR)
+        self.script     = os.path.join(self.config_dir, 'scripts', 'notify.sh')
+        self.files_path = os.path.join(self.config_dir, 'files')
         self.ioloop     = tornado.ioloop.IOLoop.instance()
         self.identifier = '{}:{}'.format(os.uname()[1], self.port)
         self.notify_scheduled = False
@@ -196,16 +196,17 @@ class NotifyDaemon(tornado.web.Application):
 
         self.ioloop.start()
 
-# Main Execution ---------------------------------------------------------------
+# Main Execution
 
 if __name__ == '__main__':
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=True)
     sys.stderr = open(sys.stderr.fileno(), mode='w', encoding='utf8', buffering=True)
 
     tornado.options.define('debug', default=False, help='Enable debugging mode.')
+    tornado.options.define('address', default=NOTIFYD_ADDRESS, help='Address to listen on.')
     tornado.options.define('port', default=NOTIFYD_PORT, help='Port to listen on.')
     tornado.options.define('peers', default=None, multiple=True, help='List of peers to pull message from.')
-    tornado.options.define('files_path', default=NOTIFYD_FILES_PATH, help='Path to files directory.')
+    tornado.options.define('config_dir', default=None, help='Configuration directory.')
     tornado.options.parse_command_line()
 
     options = tornado.options.options.as_dict()
