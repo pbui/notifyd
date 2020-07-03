@@ -12,7 +12,7 @@ case "$1" in
     up)	    pactl set-sink-volume $SINK_NAME +3%;;
     down)   pactl set-sink-volume $SINK_NAME -3%;;
     mute)   
-	if pactl list sinks | grep -q 'Mute: yes'; then
+	if pacmd dump | grep -q "set-sink-mute $SINK_NAME yes"; then
 	    pactl set-sink-mute $SINK_NAME 0
 	else
 	    pactl set-sink-mute $SINK_NAME 1
