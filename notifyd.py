@@ -32,7 +32,7 @@ NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 class MessagesHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def get(self, identifier):
-        timeout  = timeout or (time.time() + NOTIFYD_REQUEST_TIMEOUT)
+        timeout  = time.time() + NOTIFYD_REQUEST_TIMEOUT
         filtered = []
 
         while not filtered and time.time() < timeout:
