@@ -21,7 +21,6 @@ import tornado.web
 
 NOTIFYD_QUEUE_LENGTH    = 100       # Hundred messages
 NOTIFYD_PERIOD          = 1         # One second
-NOTIFYD_SLEEP           = 5         # Five seconds
 NOTIFYD_PORT            = 9411
 NOTIFYD_ADDRESS         = 'localhost'
 NOTIFYD_CONFIG_DIR      = os.path.expanduser('~/.config/notifyd')
@@ -37,7 +36,7 @@ class MessagesHandler(tornado.web.RequestHandler):
 
         while not filtered and time.time() < timeout:
             filtered = [m for m in self.application.messages if identifier not in m['delivered']]
-            yield tornado.gen.sleep(self.application.sleep)
+            yield tornado.gen.sleep(1.0)
 
         try:
             self.write(json.dumps({'messages': filtered}))
@@ -77,7 +76,6 @@ class NotifyDaemon(tornado.web.Application):
 
         self.messages   = collections.deque(maxlen=NOTIFYD_QUEUE_LENGTH)
         self.logger     = logging.getLogger()
-        self.sleep      = settings.get('sleep', NOTIFYD_SLEEP)
         self.period     = settings.get('period', NOTIFYD_PERIOD)
         self.port       = settings.get('port') or NOTIFYD_PORT
         self.address    = settings.get('address') or NOTIFYD_ADDRESS
@@ -154,20 +152,19 @@ class NotifyDaemon(tornado.web.Application):
             try:
                 self.logger.debug('Starting pull...')
                 response = yield http_client.fetch(request)
+                data     = response.body.decode('UTF-8')
+                messages = json.loads(data)['messages']
 
-                try:
-                    data     = response.body.decode('UTF-8')
-                    messages = json.loads(data)['messages']
-                    for message in messages:
-                        message['notified'] = False
-                    self.add_messages(messages)
-                except (AttributeError, TypeError, ValueError, KeyError) as e:
-                    if response.body:
-                        self.logger.error('Could not read json: {}\n{}'.format(response.body, e))
+                for message in messages:
+                    message['notified'] = False
+                self.add_messages(messages)
             except Exception as e:
                 self.logger.warning('Could fetch from peer {}: {}'.format(peer, e))
-
-            yield tornado.gen.sleep(self.sleep)
+                yield tornado.gen.sleep(1.0)
+            except (AttributeError, TypeError, ValueError, KeyError) as e:
+                if response.body:
+                    self.logger.error('Could not read json: {}\n{}'.format(response.body, e))
+                yield tornado.gen.sleep(1.0)
 
     def run(self):
         try:
