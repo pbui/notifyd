@@ -30,35 +30,25 @@ NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 # Messages Handler
 
 class MessagesHandler(tornado.web.RequestHandler):
-    finished = False
-
-    def get(self, identifier, timeout=None):
-        if self.finished:
-            return
-
+    @tornado.gen.coroutine
+    def get(self, identifier):
         timeout  = timeout or (time.time() + NOTIFYD_REQUEST_TIMEOUT)
-        filtered = [m for m in self.application.messages if identifier not in m['delivered']]
+        filtered = []
 
-        if filtered or time.time() >= timeout:
-            try:
-                self.write(json.dumps({'messages': filtered}))
-                for message in filtered:
-                    message['delivered'].append(identifier)
-                self.application.logger.debug('sent json: {}'.format(filtered))
-            except (RuntimeError, TypeError) as e:
-                self.application.logger.error('could not write json: {}'.format(e))
-        else:
-            self.application.logger.debug('GET timeout...')
-            tornado.ioloop.IOLoop.instance().add_timeout(
-                datetime.timedelta(seconds=self.application.sleep),
-                lambda: self.get(identifier, timeout))
+        while not filtered and time.time() < timeout:
+            filtered = [m for m in self.application.messages if identifier not in m['delivered']]
+            yield tornado.gen.sleep(self.sleep)
 
-    def on_connection_close(self):
-        self.finished = True
-        self.application.logger.debug('Connection closed')
-        self.finish()
+        try:
+            self.write(json.dumps({'messages': filtered}))
+            for message in filtered:
+                message['delivered'].append(identifier)
+            self.application.logger.debug('Sent json: {}'.format(filtered))
+        except (RuntimeError, TypeError) as e:
+            self.application.logger.error('Could not write json: {}'.format(e))
 
-    def post(self, timeout=None):
+    @tornado.gen.coroutine
+    def post(self):
         try:
             data     = self.request.body.decode('UTF-8')
             messages = json.loads(data)['messages']
