@@ -165,7 +165,7 @@ class NotifyDaemon(tornado.web.Application):
                     if response.body:
                         self.logger.error('Could not read json: {}\n{}'.format(response.body, e))
             except Exception as e:
-                self.logger.warn('Could fetch from peer {}: {}'.format(peer, e))
+                self.logger.warning('Could fetch from peer {}: {}'.format(peer, e))
 
             yield tornado.gen.sleep(self.sleep)
 
