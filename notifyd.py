@@ -156,13 +156,14 @@ class NotifyDaemon(tornado.web.Application):
             self.ioloop.add_timeout(datetime.timedelta(seconds=self.period), self.notify)
             self.notify_scheduled = True
 
+    @tornado.gen.coroutine
     def pull(self, peer):
         self.logger.debug('Starting pull...')
         http_client = tornado.httpclient.AsyncHTTPClient()
         request     = tornado.httpclient.HTTPRequest(
             url             = '{}/messages/{}'.format(peer, self.identifier),
             request_timeout = NOTIFYD_REQUEST_TIMEOUT)
-        response    = yield tornado.gen.Task(http_client.fetch, request)
+        response    = yield http_client.fetch(request)
 
         self.logger.debug('Finishing pull...')
 
@@ -174,7 +175,7 @@ class NotifyDaemon(tornado.web.Application):
 
             self.add_messages(messages)
         except (AttributeError, TypeError, ValueError, KeyError) as e:
-            if response.body is not None:
+            if response.body:
                 self.logger.error('could not read json: {}\n{}'.format(response.body, e))
 
         self.ioloop.add_timeout(datetime.timedelta(seconds=self.sleep), lambda: self.pull(peer))
