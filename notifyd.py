@@ -160,20 +160,22 @@ class NotifyDaemon(tornado.web.Application):
         request     = tornado.httpclient.HTTPRequest(
             url             = '{}/messages/{}'.format(peer, self.identifier),
             request_timeout = NOTIFYD_REQUEST_TIMEOUT)
-        response    = yield http_client.fetch(request)
-
-        self.logger.debug('Finishing pull...')
 
         try:
-            data     = response.body.decode('UTF-8')
-            messages = json.loads(data)['messages']
-            for message in messages:
-                message['notified'] = False
+            response = yield http_client.fetch(request)
+            self.logger.debug('Finishing pull...')
 
-            self.add_messages(messages)
-        except (AttributeError, TypeError, ValueError, KeyError) as e:
-            if response.body:
-                self.logger.error('could not read json: {}\n{}'.format(response.body, e))
+            try:
+                data     = response.body.decode('UTF-8')
+                messages = json.loads(data)['messages']
+                for message in messages:
+                    message['notified'] = False
+                self.add_messages(messages)
+            except (AttributeError, TypeError, ValueError, KeyError) as e:
+                if response.body:
+                    self.logger.error('Could not read json: {}\n{}'.format(response.body, e))
+        except ConnectionRefusedError as e:
+            self.logger.error('Could fetch from peer: {}\n{}'.format(peer, e))
 
         self.ioloop.add_timeout(datetime.timedelta(seconds=self.sleep), lambda: self.pull(peer))
 
