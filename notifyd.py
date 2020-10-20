@@ -47,7 +47,6 @@ class MessagesHandler(tornado.web.RequestHandler):
                 self.application.logger.debug('sent json: {}'.format(filtered))
             except (RuntimeError, TypeError) as e:
                 self.application.logger.error('could not write json: {}'.format(e))
-            self.finish()
         else:
             self.application.logger.debug('GET timeout...')
             tornado.ioloop.IOLoop.instance().add_timeout(
@@ -71,8 +70,6 @@ class MessagesHandler(tornado.web.RequestHandler):
             self.application.add_messages(messages)
         except (AttributeError, ValueError, KeyError) as e:
             self.application.logger.error('could not read json: {}\n'.format(e))
-
-        self.finish()
 
 # StaticFileHandler
 
