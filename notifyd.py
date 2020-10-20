@@ -37,7 +37,7 @@ class MessagesHandler(tornado.web.RequestHandler):
 
         while not filtered and time.time() < timeout:
             filtered = [m for m in self.application.messages if identifier not in m['delivered']]
-            yield tornado.gen.sleep(self.sleep)
+            yield tornado.gen.sleep(self.application.sleep)
 
         try:
             self.write(json.dumps({'messages': filtered}))
