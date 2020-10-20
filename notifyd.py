@@ -145,29 +145,29 @@ class NotifyDaemon(tornado.web.Application):
 
     @tornado.gen.coroutine
     def pull(self, peer):
-        self.logger.debug('Starting pull...')
-        http_client = tornado.httpclient.AsyncHTTPClient()
-        request     = tornado.httpclient.HTTPRequest(
-            url             = '{}/messages/{}'.format(peer, self.identifier),
-            request_timeout = NOTIFYD_REQUEST_TIMEOUT)
-
-        try:
-            response = yield http_client.fetch(request)
-            self.logger.debug('Finishing pull...')
+        while True:
+            http_client = tornado.httpclient.AsyncHTTPClient()
+            request     = tornado.httpclient.HTTPRequest(
+                url             = '{}/messages/{}'.format(peer, self.identifier),
+                request_timeout = NOTIFYD_REQUEST_TIMEOUT)
 
             try:
-                data     = response.body.decode('UTF-8')
-                messages = json.loads(data)['messages']
-                for message in messages:
-                    message['notified'] = False
-                self.add_messages(messages)
-            except (AttributeError, TypeError, ValueError, KeyError) as e:
-                if response.body:
-                    self.logger.error('Could not read json: {}\n{}'.format(response.body, e))
-        except ConnectionRefusedError as e:
-            self.logger.error('Could fetch from peer: {}\n{}'.format(peer, e))
+                self.logger.debug('Starting pull...')
+                response = yield http_client.fetch(request)
 
-        self.ioloop.add_timeout(datetime.timedelta(seconds=self.sleep), lambda: self.pull(peer))
+                try:
+                    data     = response.body.decode('UTF-8')
+                    messages = json.loads(data)['messages']
+                    for message in messages:
+                        message['notified'] = False
+                    self.add_messages(messages)
+                except (AttributeError, TypeError, ValueError, KeyError) as e:
+                    if response.body:
+                        self.logger.error('Could not read json: {}\n{}'.format(response.body, e))
+            except Exception as e:
+                self.logger.warn('Could fetch from peer {}: {}'.format(peer, e))
+
+            yield tornado.gen.sleep(self.sleep)
 
     def run(self):
         try:
