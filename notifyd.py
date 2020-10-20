@@ -32,7 +32,6 @@ NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
 class MessagesHandler(tornado.web.RequestHandler):
     finished = False
 
-    @tornado.web.asynchronous
     def get(self, identifier, timeout=None):
         if self.finished:
             return
@@ -60,7 +59,6 @@ class MessagesHandler(tornado.web.RequestHandler):
         self.application.logger.debug('Connection closed')
         self.finish()
 
-    @tornado.web.asynchronous
     def post(self, timeout=None):
         try:
             data     = self.request.body.decode('UTF-8')
@@ -158,7 +156,6 @@ class NotifyDaemon(tornado.web.Application):
             self.ioloop.add_timeout(datetime.timedelta(seconds=self.period), self.notify)
             self.notify_scheduled = True
 
-    @tornado.gen.engine
     def pull(self, peer):
         self.logger.debug('Starting pull...')
         http_client = tornado.httpclient.AsyncHTTPClient()
