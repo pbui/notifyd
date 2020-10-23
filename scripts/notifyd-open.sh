@@ -8,16 +8,16 @@ for file in "$@"; do
     NAME=$(basename "$file")
     EXTENSION="${NAME##*.}"
 
-    BODY="http://localhost:9412/files/$NAME"
+    BODY="http://$(ip -br addr show wg0 | grep -Po '\d+.\d+.\d+.\d+'):9411/files/$NAME"
     if ! cp "$file" "$FILES_PATH/$NAME"; then
 	continue
     fi
 
     case ${EXTENSION} in
 	doc|docx|xls|xlsx)
-	    BODY="$(google-drive-upload $file)"
-	    if [ -z ${BODY} ]; then
-		BODY="http://localhost:9412/files/$NAME"
+	    UPLOAD="$(google-drive-upload $file)"
+	    if [ ! -z "${UPLOAD}" ]; then
+		BODY="${UPLOAD}"
 	    fi
 	;;
     esac
