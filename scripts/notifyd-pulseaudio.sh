@@ -1,18 +1,28 @@
 #!/bin/bash
 
 get_volume() {
-    pacmd list-sinks |
-	awk '/^\s+name: /{indefault = $2 == "<'$SINK_NAME'>"}
-	    /^\s+volume: / && indefault {print $5; exit}'
+    pactl list sinks |
+    	awk -v SINK_NAME=$SINK_NAME '
+	    /Name:/		    { is_default = $2 == SINK_NAME }
+	    /Volume:/ && is_default { print $5; exit }
+    	'
 }
 
-SINK_NAME=$(pacmd info | awk '/Default sink/ {print $4}')
+get_muted() {
+    pactl list sinks |
+    	awk -v SINK_NAME=$SINK_NAME '
+	    /Name:/		  { is_default = $2 == SINK_NAME }
+	    /Mute:/ && is_default { print $2; exit }
+    	'
+}
+
+SINK_NAME=$(pactl info | awk '/Default Sink/ {print $3}')
 
 case "$1" in
     up)	    pactl set-sink-volume $SINK_NAME +3%;;
     down)   pactl set-sink-volume $SINK_NAME -3%;;
-    mute)   
-	if pacmd dump | grep -q "set-sink-mute $SINK_NAME yes"; then
+    mute)
+	if [ "$(get_muted)" = 'yes' ]; then
 	    pactl set-sink-mute $SINK_NAME 0
 	else
 	    pactl set-sink-mute $SINK_NAME 1
