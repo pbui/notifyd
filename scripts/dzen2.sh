@@ -57,9 +57,13 @@ dzen2_notify() {
     body=$(echo $3 | sed 's/\^/\^\^/g')
 
     detect_screens | while read screen; do
-	width=$(echo $screen | awk '{print $1}')
+        width=$(($(echo $screen | awk '{print $1}') * 2 / 3))
 	x=$(echo $screen | awk '{print $2}')
 	y=$(echo $screen | awk '{print $3}')
+
+	#if [ $y = 0 ]; then
+	#    continue
+	#fi
 
         message="^bg(${DZEN2_HIGHLIGHT})^fg(${DZEN2_BACKGROUND}) ${type} ^bg()^fg() ${sender}"
 	if [ -n "${body}" ]; then
