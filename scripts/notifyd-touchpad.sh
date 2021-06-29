@@ -7,6 +7,7 @@ disable() {
 
 enable() {
     xinput enable $ID
+    xinput set-prop $ID "libinput Tapping Enabled" 1
     xinput set-prop $ID "libinput Scroll Method Enabled" 1, 0, 0
     notifyd-send TOUCHPAD Enabled
 }
