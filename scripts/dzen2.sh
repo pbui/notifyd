@@ -36,14 +36,19 @@ detect_screens() {
     	return 0
     fi
 
-    xrandr -q | grep ' connected' | awk 'match($0, /[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/) {
+    xrandr -q | grep ' connected' | awk 'match($0, /connected.*[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/) {
 	print substr($0, RSTART, RLENGTH)
     }' | while read screen; do
-	width=$(echo ${screen} | cut -d x -f 1)
+	width=$(echo ${screen} | cut -d x -f 1 | awk '{print $NF}')
 	x=$(echo ${screen} | cut -d + -f 2)
 	y=$(echo ${screen} | cut -d + -f 3)
+	if echo ${screen} | grep -q primary; then
+	    primary=1
+	else
+	    primary=0
+        fi
 
-	echo ${width} ${x} ${y}
+	echo ${width} ${x} ${y} ${primary}
     done | tee ${SCREEN_CACHE_FILE}
 }
 
@@ -60,10 +65,11 @@ dzen2_notify() {
         width=$(($(echo $screen | awk '{print $1}') * 2 / 3))
 	x=$(echo $screen | awk '{print $2}')
 	y=$(echo $screen | awk '{print $3}')
+	primary=$(echo $screen | awk '{print $4}')
 
-	#if [ $y = 0 ]; then
-	#    continue
-	#fi
+	if [ $primary -eq 0 ]; then
+	    continue
+	fi
 
         message="^bg(${DZEN2_HIGHLIGHT})^fg(${DZEN2_BACKGROUND}) ${type} ^bg()^fg() ${sender}"
 	if [ -n "${body}" ]; then
