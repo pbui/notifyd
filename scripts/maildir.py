@@ -9,9 +9,7 @@ import time
 import requests
 import re
 
-#------------------------------------------------------------------------------
 # Configuration
-#------------------------------------------------------------------------------
 
 TIMEOUT          = 5 * 60
 SENDER_BLACKLIST = []
@@ -24,10 +22,13 @@ LISTID_BLACKLIST = [
     '.*\.centos\.org',
 ]
 MAILDIRS        = ('cur', 'new', 'tmp')
+MBSYNCFILES     = ('.mbsyncstate', '.uidvalidity')
+PATHS           = {
+    'Fastmail'  : '/home/pbui/mail/pbui@bx612.space',
+    'Gmail'     : '/home/pbui/mail/pbui@nd.edu',
+}
 
-#------------------------------------------------------------------------------
 # Walk maildir and notify of new messages
-#------------------------------------------------------------------------------
 
 def filter_message(path):
     if ('Spam' in path or
@@ -40,12 +41,16 @@ def filter_message(path):
         return None, None
 
     message = email.message_from_file(open(path, 'r'))
-    sender  = message['From'].split('<')[0]\
-                .replace('&','&amp;')\
-                .replace('"','')
-    subject = message['Subject'].replace('&', '&amp;')\
-                .replace('$', '')\
-                .replace('!', '')
+
+    try:
+        sender  = message['From'].split('<')[0]\
+                    .replace('&','&amp;')\
+                    .replace('"','')
+        subject = message['Subject'].replace('&', '&amp;')\
+                    .replace('$', '')\
+                    .replace('!', '')
+    except AttributeError:
+        return None, None
 
     for s in SENDER_BLACKLIST:
         if s in sender:
@@ -73,6 +78,13 @@ def notify_maildir(maildir):
                 except OSError:
                     pass
 
+        if not os.path.basename(root) == 'new' and 'new' not in dirs:
+            for mbsyncfile in MBSYNCFILES:
+                try:
+                    os.remove(os.path.join(root, mbsyncfile))
+                except OSError:
+                    pass
+
         for file in files:
             sender, subject = filter_message(os.path.join(root, file))
             if sender and subject:
@@ -85,13 +97,13 @@ def notify_maildir(maildir):
     if messages:
         requests.post('http://localhost:9411/messages', data=json.dumps({'messages': messages}))
 
-#------------------------------------------------------------------------------
 # Main execution
-#------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     try:
         for maildir in sys.argv[1:]:
+            maildir = PATHS.get(maildir, maildir)
+            print(f'Scanning {maildir}')
             notify_maildir(maildir)
     except KeyboardInterrupt:
         sys.exit(0)
