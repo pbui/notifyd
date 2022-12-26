@@ -19,6 +19,7 @@ case $icon in
     SCREENSHOT) icon=applets-screenshooter; title=Screenshot;;
     PIANOBAR)	icon=google-music-manager-panel;;
     TOUCHPAD)	icon=mouse; title=Touchpad;;
+    WWW)	icon=web-browser; title=Link;;
     *)		icon=dialog-information;;
 esac
 
