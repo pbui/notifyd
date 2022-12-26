@@ -23,4 +23,6 @@ case $icon in
     *)		icon=dialog-information;;
 esac
 
+body=$(echo "$body" | sed 's|\\|\\\\|g')
+
 notify-send --icon="$icon" "$title" "$body"
