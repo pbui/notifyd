@@ -24,7 +24,7 @@ NOTIFYD_PERIOD          = 1         # One second
 NOTIFYD_PORT            = 9411
 NOTIFYD_ADDRESS         = 'localhost'
 NOTIFYD_CONFIG_DIR      = os.path.expanduser('~/.config/notifyd')
-NOTIFYD_REQUEST_TIMEOUT = 10 * 60   # Ten Minutes
+NOTIFYD_REQUEST_TIMEOUT = 60        # One minute
 
 # Messages Handler
 
@@ -182,7 +182,7 @@ class NotifyDaemon(tornado.web.Application):
 
 # Main Execution
 
-if __name__ == '__main__':
+def main():
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=True)
     sys.stderr = open(sys.stderr.fileno(), mode='w', encoding='utf8', buffering=True)
 
@@ -196,5 +196,8 @@ if __name__ == '__main__':
     options = tornado.options.options.as_dict()
     notifyd = NotifyDaemon(**options)
     notifyd.run()
+
+if __name__ == '__main__':
+    main()
 
 # vim: sts=4 sw=4 ts=8 expandtab ft=python
