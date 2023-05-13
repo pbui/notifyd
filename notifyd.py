@@ -159,7 +159,7 @@ class NotifyDaemon(tornado.web.Application):
                     message['notified'] = False
                 self.add_messages(messages)
             except Exception as e:
-                self.logger.warning('Could fetch from peer {}: {}'.format(peer, e))
+                self.logger.warning('Could not fetch from peer {}: {}'.format(peer, e))
                 yield tornado.gen.sleep(1.0)
             except (AttributeError, TypeError, ValueError, KeyError) as e:
                 if response.body:
